@@ -1,0 +1,56 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+  --font-mono: "IBM Plex Mono", "SFMono-Regular", Menlo, Monaco, Consolas, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  background:
+    radial-gradient(circle at 20% 10%, rgba(32, 228, 255, 0.14), transparent 28%),
+    radial-gradient(circle at 85% 20%, rgba(255, 63, 129, 0.12), transparent 24%),
+    linear-gradient(135deg, #04050a 0%, #0b0e16 48%, #05070c 100%);
+  color: #edf7ff;
+  font-family: var(--font-mono);
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+.grid-noise {
+  background-image:
+    linear-gradient(rgba(32, 228, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(32, 228, 255, 0.06) 1px, transparent 1px);
+  background-size: 42px 42px;
+  mask-image: linear-gradient(to bottom, black, transparent);
+}
+
+.scanline::after {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.035), transparent);
+  background-size: 100% 9px;
+  mix-blend-mode: screen;
+}
+
+.thin-scrollbar::-webkit-scrollbar {
+  width: 7px;
+}
+
+.thin-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(32, 228, 255, 0.35);
+  border-radius: 999px;
+}
