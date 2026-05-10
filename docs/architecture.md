@@ -69,6 +69,11 @@ The current app is a Next.js + TypeScript demo with:
 
 - animated swarm visualization
 - task yeeting and swarm formation
+- websocket coordinator for live node events
+- simulated worker registration and heartbeat messages
+- ed25519 signed execution receipts
+- persistent local reputation tracking
+- marketplace-style task lifecycle state
 - mock consumer hardware node registry
 - redundant execution outputs
 - malicious digest injection
@@ -76,9 +81,60 @@ The current app is a Next.js + TypeScript demo with:
 - challenger dispute
 - slashing and weighted rewards
 - simple API routes for task and node simulation
+- CLI scripts for starting a swarm, spawning malicious workers, and dispatching tasks
+- Docker worker simulation for local multi-node demos
 - Solidity economic prototype used as an initial contract sketch
 
 The Solidity contract is now treated as an economic logic prototype only. The intended production target is Solana programs written in Rust with Anchor.
+
+## Live Coordination Layer
+
+The MVP includes a lightweight Node.js websocket coordinator at `server/coordination-server.js`.
+
+It provides:
+
+- node registration
+- heartbeat tracking
+- node discovery snapshots
+- task dispatch
+- temporary swarm assignment
+- independent simulated node responses
+- malicious digest divergence
+- signed receipt streaming
+- local reputation persistence
+- live logs and network metrics
+
+The frontend connects to `ws://localhost:8787` when available. If the coordinator is offline, the UI falls back to the deterministic local simulation so the presentation remains stable.
+
+## Signed Execution Receipts
+
+Each simulated node has an ed25519 identity. Receipts include:
+
+- task id
+- node id
+- role
+- output digest
+- issue timestamp
+- public key
+- signature
+- verification status
+
+This does not prove the computation itself. It proves authorship of an output commitment and creates a realistic path toward signed worker agents, challenge evidence, and Solana settlement records.
+
+## Persistent Reputation
+
+Reputation persists locally in `data/reputation.json`.
+
+Tracked fields:
+
+- reputation score
+- slash count
+- successful validations
+- challenge wins
+- malicious flags
+- last seen timestamp
+
+In the Solana version, this maps to PDA-owned node profile state or compressed reputation state.
 
 ## Runtime Flow
 

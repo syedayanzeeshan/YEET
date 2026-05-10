@@ -1,0 +1,10 @@
+FROM node:20-alpine
+
+WORKDIR /app
+COPY package*.json ./
+RUN npm install --omit=dev
+COPY server ./server
+COPY workers ./workers
+
+ENV YEET_COORDINATOR_URL=ws://host.docker.internal:8787
+CMD ["node", "workers/worker.js"]

@@ -4,6 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "coord:dev": "node server/coordination-server.js",
+    "swarm:start": "node scripts/start-swarm.js",
+    "swarm:malicious": "node scripts/spawn-malicious-node.js",
+    "swarm:dispatch": "node scripts/dispatch-task.js",
     "build": "next build",
     "start": "next start",
     "lint": "eslint app --max-warnings=0",
@@ -23,7 +27,8 @@
     "react-dom": "^18.3.1",
     "tailwindcss": "^3.4.3",
     "typescript": "^5.4.5",
-    "viem": "^2.12.1"
+    "viem": "^2.12.1",
+    "ws": "^8.18.0"
   },
   "devDependencies": {
     "eslint": "^9.39.4",

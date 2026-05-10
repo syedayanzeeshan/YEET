@@ -4,7 +4,7 @@ Yielding Ephemeral Execution Topology
 
 YEET rewards nodes for proving the network wrong.
 
-This repo is a Solana Frontier hackathon MVP for an adversarial compute coordination protocol. It simulates networking, execution, swarm formation, and consensus scoring while framing Solana as the future economic verification and settlement layer.
+This repo is a Solana Frontier hackathon MVP for an adversarial compute coordination protocol. It now includes a polished frontend, a lightweight websocket coordination layer, signed execution receipts, persistent local reputation, dockerized worker simulation, and a Solana/Anchor architecture scaffold.
 
 ## Demo Flow
 
@@ -22,6 +22,9 @@ This repo is a Solana Frontier hackathon MVP for an adversarial compute coordina
 ## Folder Structure
 
 ```txt
+anchor/
+  programs/yeet_coordination/  Anchor program scaffold
+  app/src/                     PDA and transaction payload examples
 app/
   api/
     demo/route.ts          Demo scenario API
@@ -33,10 +36,34 @@ app/
   page.tsx                 Demo UI
 contracts/
   YeetSwarm.sol            Initial economic logic prototype
+data/
+  reputation.json           Local persistent reputation store
 docs/
   architecture.md          Solana-native protocol architecture
-  demo.md                  Solana Frontier demo order and talk track
+  demo.md                  (optional local copy; excluded from Git — demo / video scripts)
+logs/
+  sample-swarm.log          Example coordinator event stream
+server/
+  coordination-server.js    Websocket coordinator
+  receipt-crypto.js         ed25519 receipt signing helpers
+  reputation-store.js       Local reputation persistence
+scripts/
+  start-swarm.js            Start websocket coordinator
+  spawn-malicious-node.js   Spawn a malicious local worker
+  dispatch-task.js          Dispatch a task through websocket
+workers/
+  worker.js                 Docker/local worker process
 ```
+
+## Troubleshooting
+
+**`EADDRINUSE` on port 8787:** Another coordinator (or stray process) is still bound to the WebSocket port. Stop it, for example:
+
+```bash
+kill $(lsof -t -iTCP:8787 -sTCP:LISTEN)
+```
+
+Or run on another port (`YEET_COORDINATOR_PORT=8788 npm run coord:dev`) and set `NEXT_PUBLIC_YEET_COORDINATOR_WS=ws://localhost:8788` before `npm run dev` so the UI matches.
 
 ## Run
 
@@ -47,6 +74,44 @@ npm run dev
 
 Open `http://localhost:3000` and press `YEET TASK`.
 
+## Semi-Functional Swarm Demo
+
+Run the websocket coordinator in one terminal:
+
+```bash
+npm run coord:dev
+```
+
+Run the frontend in another:
+
+```bash
+npm run dev
+```
+
+Dispatch a task from the CLI:
+
+```bash
+npm run swarm:dispatch -- "receipt verification pulse"
+```
+
+Spawn an extra malicious worker:
+
+```bash
+npm run swarm:malicious
+```
+
+The frontend connects to `ws://localhost:8787`. If the coordinator is not running, the app falls back to the local deterministic simulation so the demo remains stable.
+
+## Docker Worker Simulation
+
+Start several local worker containers:
+
+```bash
+docker compose up --build
+```
+
+Workers register with the coordinator, heartbeat, simulate latency, and submit signed ed25519 receipts. The malicious worker deliberately generates divergent output.
+
 ## Stack
 
 - Next.js
@@ -54,8 +119,34 @@ Open `http://localhost:3000` and press `YEET TASK`.
 - Tailwind
 - Framer Motion
 - viem/ethers-compatible demo wallet direction
+- Node.js websocket coordinator
+- ed25519 signed execution receipts
+- local JSON reputation persistence
+- dockerized worker simulation
 - Future protocol target: Solana programs with Rust + Anchor
 - Solidity contract retained as an economic prototype
+
+## Architecture Notes
+
+The coordinator handles demo-time node registration, heartbeat tracking, task assignment, receipt streaming, malicious divergence, slashing events, reward events, and reputation updates. Solana is represented as the future settlement layer: Anchor programs would own node profile PDAs, task escrow accounts, staking vaults, slashing, reward distribution, and reputation state.
+
+The current system is intentionally semi-functional, not fake production infrastructure:
+
+- execution is simulated
+- websocket coordination is local
+- P2P networking is not implemented
+- Anchor code is a scaffold
+- wallet settlement is a placeholder
+- reputation persists locally in `data/reputation.json`
+
+## Future Work
+
+- Replace local coordinator trust with signed node agents and replicated coordination.
+- Implement real Anchor instructions for node profiles, task escrow, staking, slashing, and rewards.
+- Add deterministic task adapters for verifiable inference and hashing workloads.
+- Introduce challenge evidence formats and optional zk proof adapters.
+- Build a Sybil-aware reputation graph using compressed state.
+- Expand docker workers into real node binaries with hardware telemetry.
 
 ## Design Principle
 

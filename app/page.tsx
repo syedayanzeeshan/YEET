@@ -4,12 +4,20 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Activity, Binary, Network, ShieldCheck } from "lucide-react";
 import { ConsensusTimeline } from "@/app/components/ConsensusTimeline";
+import {
+  LiveEventFeed,
+  NetworkMetricsPanel,
+  ReceiptPanel,
+  ReputationStrip,
+  TaskLifecyclePanel
+} from "@/app/components/LiveInfrastructurePanels";
 import { NodeMonitor } from "@/app/components/NodeMonitor";
 import { RewardFlow } from "@/app/components/RewardFlow";
 import { SolanaArchitecture } from "@/app/components/SolanaArchitecture";
 import { SwarmGraph } from "@/app/components/SwarmGraph";
 import { TaskSubmissionPanel } from "@/app/components/TaskSubmissionPanel";
 import { WalletButton } from "@/app/components/WalletButton";
+import { useSwarmSocket } from "@/app/lib/useSwarmSocket";
 import { buildDemoSwarm, defaultTask } from "@/app/lib/yeetSimulation";
 import { YeetTaskInput } from "@/app/types/yeet";
 
@@ -20,7 +28,13 @@ export default function Home() {
   const [isAutoplaying, setIsAutoplaying] = useState(false);
   const timerRef = useRef<number | null>(null);
   const demo = useMemo(() => buildDemoSwarm(task), [task]);
-  const round = demo.rounds[activeRound];
+  const swarmSocket = useSwarmSocket();
+  const round = swarmSocket.currentRound ?? demo.rounds[activeRound];
+  const displayedRoundIndex = swarmSocket.currentRound
+    ? Math.max(0, demo.rounds.findIndex((candidate) => candidate.state === swarmSocket.currentRound?.state))
+    : activeRound;
+  const liveNodes = swarmSocket.nodes.length > 0 ? swarmSocket.nodes : demo.nodes;
+  const assignedNodeIds = swarmSocket.assignedNodeIds.length > 0 ? swarmSocket.assignedNodeIds : demo.assignedNodeIds;
 
   useEffect(() => {
     return () => {
@@ -32,6 +46,12 @@ export default function Home() {
 
   function yeetTask() {
     setDemoNonce((value) => value + 1);
+    const dispatchedLive = swarmSocket.dispatchTask(task);
+    if (dispatchedLive) {
+      pauseDemo();
+      setActiveRound(0);
+      return;
+    }
     runDemo(0);
   }
 
@@ -108,14 +128,14 @@ export default function Home() {
             </div>
 
             <div className="grid gap-3 sm:grid-cols-4">
-              <Signal icon={<Network size={16} />} label="Dormant compute" value="10 nodes" />
+              <Signal icon={<Network size={16} />} label="Dormant compute" value={`${liveNodes.length || 10} nodes`} />
               <Signal icon={<Activity size={16} />} label="Swarm state" value={round.state} />
               <Signal icon={<ShieldCheck size={16} />} label="Correctness market" value="armed" />
               <Signal icon={<Binary size={16} />} label="Settlement" value="Solana-ready" />
             </div>
           </section>
 
-          <SwarmGraph nodes={demo.nodes} assignedNodeIds={demo.assignedNodeIds} round={round} pulse={activeRound + demoNonce} />
+          <SwarmGraph nodes={liveNodes} assignedNodeIds={assignedNodeIds} round={round} pulse={displayedRoundIndex + demoNonce} />
         </div>
       </div>
 
@@ -124,7 +144,7 @@ export default function Home() {
           <TaskSubmissionPanel task={task} setTask={setTask} onYeet={yeetTask} />
           <ConsensusTimeline
             rounds={demo.rounds}
-            activeIndex={activeRound}
+            activeIndex={displayedRoundIndex}
             onSelect={selectRound}
             isAutoplaying={isAutoplaying}
             onPlay={() => runDemo(activeRound)}
@@ -139,9 +159,9 @@ export default function Home() {
           </div>
 
           <div className="grid gap-4 md:grid-cols-4">
-            <InfoTile label="Task propagation" value={activeRound > 0 ? "in-flight" : "standby"} tone="pulse" />
+            <InfoTile label="Task propagation" value={swarmSocket.metrics.activeTasks > 0 || displayedRoundIndex > 0 ? "in-flight" : "standby"} tone="pulse" />
             <InfoTile label="Consensus state" value={round.state} tone={round.state === "slashing" ? "flare" : "acid"} />
-            <InfoTile label="Malicious detection" value={round.slashedNodeIds.length ? "proven" : activeRound >= 3 ? "challenged" : "watching"} tone="flare" />
+            <InfoTile label="Malicious detection" value={round.slashedNodeIds.length ? "proven" : displayedRoundIndex >= 5 ? "challenged" : "watching"} tone="flare" />
             <InfoTile label="Settlement layer" value="Solana" tone="pulse" />
           </div>
 
@@ -179,9 +199,18 @@ export default function Home() {
         </section>
 
         <div className="grid content-start gap-4">
-          <NodeMonitor nodes={demo.nodes} assignedNodeIds={demo.assignedNodeIds} />
+          <NodeMonitor nodes={liveNodes} assignedNodeIds={assignedNodeIds} />
           <RewardFlow round={round} rewardPool={task.rewardPool} />
         </div>
+      </div>
+      <div className="mx-auto grid max-w-[1500px] gap-4 px-5 pb-5 lg:grid-cols-[1fr_1fr_1fr] lg:px-8">
+        <NetworkMetricsPanel metrics={swarmSocket.metrics} connected={swarmSocket.connected} />
+        <TaskLifecyclePanel tasks={swarmSocket.tasks} />
+        <ReceiptPanel receipts={swarmSocket.receipts} />
+        <div className="lg:col-span-2">
+          <LiveEventFeed logs={swarmSocket.logs} />
+        </div>
+        <ReputationStrip reputation={swarmSocket.reputation} />
       </div>
       <WhyThisMatters />
       <SolanaArchitecture />
@@ -191,6 +220,7 @@ export default function Home() {
     </main>
   );
 }
+
 
 function WhyThisMatters() {
   return (

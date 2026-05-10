@@ -118,6 +118,14 @@ export function buildDemoSwarm(task: YeetTaskInput = defaultTask): DemoSwarm {
 
   const rounds: ConsensusRound[] = [
     {
+      state: "queued",
+      title: "Task queued",
+      description: "The request enters the task market with reward escrow, redundancy, verification threshold, and execution timeout.",
+      outputs: [],
+      slashedNodeIds: [],
+      rewardEvents: []
+    },
+    {
       state: "forming",
       title: "Ephemeral swarm formation",
       description: "Idle consumer hardware bids with stake, reliability, and capability. A temporary off-chain swarm forms around the task.",
@@ -126,10 +134,28 @@ export function buildDemoSwarm(task: YeetTaskInput = defaultTask): DemoSwarm {
       rewardEvents: []
     },
     {
+      state: "assigned",
+      title: "Node assignment",
+      description: "Executors, validators, and a challenger receive the task assignment and begin heartbeat-tracked participation.",
+      outputs: [],
+      challengerId: challenger.id,
+      slashedNodeIds: [],
+      rewardEvents: []
+    },
+    {
       state: "executing",
       title: "Redundant execution",
       description: "Executors compute independently before settlement. One node submits a fraudulent digest to test the correctness market.",
       outputs: outputs.slice(0, 3),
+      slashedNodeIds: [],
+      rewardEvents: []
+    },
+    {
+      state: "receipts",
+      title: "Signed receipts",
+      description: "Nodes attach signed execution receipts to their digests so the coordinator can verify authorship before scoring.",
+      outputs,
+      challengerId: challenger.id,
       slashedNodeIds: [],
       rewardEvents: []
     },

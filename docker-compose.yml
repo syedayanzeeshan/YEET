@@ -1,0 +1,28 @@
+services:
+  honest-worker-a:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    environment:
+      NODE_ID: docker-honest-a
+      LATENCY_MS: 700
+      YEET_COORDINATOR_URL: ws://host.docker.internal:8787
+
+  honest-worker-b:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    environment:
+      NODE_ID: docker-honest-b
+      LATENCY_MS: 950
+      YEET_COORDINATOR_URL: ws://host.docker.internal:8787
+
+  malicious-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    environment:
+      NODE_ID: docker-malicious
+      MALICIOUS: "1"
+      LATENCY_MS: 1200
+      YEET_COORDINATOR_URL: ws://host.docker.internal:8787

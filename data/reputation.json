@@ -1,0 +1,83 @@
+{
+  "node-01": {
+    "nodeId": "node-01",
+    "reputationScore": 72,
+    "slashCount": 0,
+    "successfulValidations": 0,
+    "challengeWins": 0,
+    "maliciousFlags": 0,
+    "lastSeen": 1778394772779
+  },
+  "node-02": {
+    "nodeId": "node-02",
+    "reputationScore": 72,
+    "slashCount": 0,
+    "successfulValidations": 0,
+    "challengeWins": 0,
+    "maliciousFlags": 0,
+    "lastSeen": 1778394772779
+  },
+  "node-03": {
+    "nodeId": "node-03",
+    "reputationScore": 72,
+    "slashCount": 0,
+    "successfulValidations": 0,
+    "challengeWins": 0,
+    "maliciousFlags": 0,
+    "lastSeen": 1778394772780
+  },
+  "node-04": {
+    "nodeId": "node-04",
+    "reputationScore": 74,
+    "slashCount": 0,
+    "successfulValidations": 2,
+    "challengeWins": 0,
+    "maliciousFlags": 0,
+    "lastSeen": 1778396494637
+  },
+  "node-05": {
+    "nodeId": "node-05",
+    "reputationScore": 38,
+    "slashCount": 2,
+    "successfulValidations": 2,
+    "challengeWins": 0,
+    "maliciousFlags": 2,
+    "lastSeen": 1778396497938
+  },
+  "node-06": {
+    "nodeId": "node-06",
+    "reputationScore": 74,
+    "slashCount": 0,
+    "successfulValidations": 0,
+    "challengeWins": 0,
+    "maliciousFlags": 0,
+    "lastSeen": 1778396494637
+  },
+  "node-07": {
+    "nodeId": "node-07",
+    "reputationScore": 74,
+    "slashCount": 0,
+    "successfulValidations": 0,
+    "challengeWins": 0,
+    "maliciousFlags": 0,
+    "lastSeen": 1778396494637
+  },
+  "node-08": {
+    "nodeId": "node-08",
+    "reputationScore": 74,
+    "slashCount": 0,
+    "successfulValidations": 0,
+    "challengeWins": 0,
+    "maliciousFlags": 0,
+    "lastSeen": 1778396494637
+  },
+  "worker-malicious-01": {
+    "nodeId": "worker-malicious-01",
+    "reputationScore": 72,
+    "slashCount": 0,
+    "successfulValidations": 0,
+    "challengeWins": 0,
+    "maliciousFlags": 0,
+    "lastSeen": 1778396488632
+  }
+}

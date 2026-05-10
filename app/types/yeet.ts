@@ -3,8 +3,11 @@ export type TaskType = "matrix" | "image" | "hashing" | "ai-inference" | "render
 export type NodeRole = "executor" | "validator" | "challenger" | "hybrid";
 
 export type ConsensusState =
+  | "queued"
   | "forming"
+  | "assigned"
   | "executing"
+  | "receipts"
   | "validating"
   | "challenged"
   | "slashing"
@@ -50,6 +53,7 @@ export type ExecutionOutput = {
   confidence: number;
   malicious: boolean;
   latencyMs: number;
+  receipt?: ExecutionReceipt;
 };
 
 export type RewardEvent = {
@@ -76,4 +80,67 @@ export type DemoSwarm = {
   assignedNodeIds: string[];
   rounds: ConsensusRound[];
   verifiedResult: string;
+};
+
+export type ExecutionReceipt = {
+  receiptId: string;
+  taskId: string;
+  nodeId: string;
+  digest: string;
+  role: NodeRole;
+  issuedAt: number;
+  publicKey: string;
+  signature: string;
+  verified: boolean;
+};
+
+export type NodeReputation = {
+  nodeId: string;
+  reputationScore: number;
+  slashCount: number;
+  successfulValidations: number;
+  challengeWins: number;
+  maliciousFlags: number;
+  lastSeen: number;
+};
+
+export type MarketplaceTask = {
+  id: string;
+  name: string;
+  type: TaskType;
+  status: "queued" | "active" | "completed" | "failed";
+  rewardPool: number;
+  participantIds: string[];
+  createdAt: number;
+  updatedAt: number;
+};
+
+export type SwarmLogEvent = {
+  id: string;
+  ts: number;
+  level: "info" | "success" | "warn" | "danger";
+  message: string;
+};
+
+export type SwarmMetrics = {
+  connectedNodes: number;
+  heartbeatsPerMinute: number;
+  receiptsVerified: number;
+  invalidReceipts: number;
+  queuedTasks: number;
+  activeTasks: number;
+  completedTasks: number;
+  slashedNodes: number;
+};
+
+export type SwarmSocketSnapshot = {
+  connected: boolean;
+  nodes: YeetNode[];
+  assignedNodeIds: string[];
+  currentRound?: ConsensusRound;
+  receipts: ExecutionReceipt[];
+  reputation: NodeReputation[];
+  tasks: MarketplaceTask[];
+  logs: SwarmLogEvent[];
+  metrics: SwarmMetrics;
 };

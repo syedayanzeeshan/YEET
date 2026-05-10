@@ -1,4 +1,8 @@
 node_modules
+
+# Private runbook / video scripts — not shipped to GitHub
+docs/demo.md
+
 .next
 out
 dist
