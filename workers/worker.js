@@ -6,9 +6,13 @@ const malicious = process.env.MALICIOUS === "1";
 const nodeId = process.env.NODE_ID ?? `worker-${malicious ? "mal" : "honest"}-${Math.floor(Math.random() * 9999)}`;
 const latencyMs = Number(process.env.LATENCY_MS ?? (malicious ? 1300 : 750));
 const keys = createNodeIdentity();
+
+console.log(`[yeet-worker] ${nodeId} connecting to ${coordinator} (malicious=${malicious})`);
+
 const socket = new WebSocket(coordinator);
 
 socket.on("open", () => {
+  console.log(`[yeet-worker] ${nodeId} registered with coordinator`);
   socket.send(JSON.stringify({
     type: "register_worker",
     payload: {
@@ -27,6 +31,15 @@ socket.on("open", () => {
   setInterval(() => {
     socket.send(JSON.stringify({ type: "worker_heartbeat", payload: { nodeId, ts: Date.now() } }));
   }, 2500);
+});
+
+socket.on("error", (err) => {
+  console.error(`[yeet-worker] ${nodeId} websocket error:`, err.message);
+});
+
+socket.on("close", (code, reason) => {
+  const why = reason?.toString() || "no reason";
+  console.warn(`[yeet-worker] ${nodeId} connection closed (code ${code}): ${why}`);
 });
 
 socket.on("message", (raw) => {

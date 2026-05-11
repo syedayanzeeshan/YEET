@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { Activity, Binary, Network, ShieldCheck } from "lucide-react";
 import { ConsensusTimeline } from "@/app/components/ConsensusTimeline";
@@ -96,8 +97,8 @@ export default function Home() {
           <section className="flex min-h-[420px] flex-col justify-between">
             <nav className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <div className="grid h-10 w-10 place-items-center border border-acid/40 bg-acid/10 text-acid shadow-acid">
-                  <Binary size={22} />
+                <div className="relative grid h-10 w-10 place-items-center overflow-hidden border border-acid/40 bg-black shadow-acid">
+                  <Image src="/yeet-logo.png" alt="YEET" width={40} height={40} className="object-contain" priority />
                 </div>
                 <div>
                   <div className="text-xl font-black uppercase tracking-[0.22em] text-white">YEET</div>
@@ -215,7 +216,7 @@ export default function Home() {
       <WhyThisMatters />
       <SolanaArchitecture />
       <footer className="border-t border-white/10 bg-black/40 py-4 text-center text-xs uppercase tracking-[0.25em] text-white/40">
-        ayan · uswa · tamveel
+        ayan · uswa 
       </footer>
     </main>
   );

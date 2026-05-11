@@ -1,5 +1,10 @@
 const { spawn } = require("child_process");
 
+console.log(
+  "Starting malicious worker (connects to YEET_COORDINATOR_URL, default ws://localhost:8787).\n" +
+    "If nothing happens, start the coordinator first: npm run coord:dev"
+);
+
 spawn("node", ["workers/worker.js"], {
   stdio: "inherit",
   env: {

@@ -3,7 +3,11 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "YEET | Solana-Native Correctness Markets",
-  description: "YEET rewards nodes for proving the network wrong through adversarially validated ephemeral compute swarms."
+  description: "YEET rewards nodes for proving the network wrong through adversarially validated ephemeral compute swarms.",
+  icons: {
+    icon: "/yeet-logo.png",
+    apple: "/yeet-logo.png"
+  }
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

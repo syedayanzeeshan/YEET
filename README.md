@@ -104,13 +104,21 @@ The frontend connects to `ws://localhost:8787`. If the coordinator is not runnin
 
 ## Docker Worker Simulation
 
-Start several local worker containers:
+Workers register with the coordinator, heartbeat, simulate latency, and submit signed ed25519 receipts. The malicious worker deliberately generates divergent output.
+
+**If `docker compose` is not available** (for example the Compose V2 plugin is not installed), use plain Docker:
+
+```bash
+npm run docker:workers
+```
+
+**With Docker Compose V2** (subcommand `docker compose`, not the legacy `docker-compose` hyphen binary):
 
 ```bash
 docker compose up --build
 ```
 
-Workers register with the coordinator, heartbeat, simulate latency, and submit signed ed25519 receipts. The malicious worker deliberately generates divergent output.
+On Linux, ensure `host.docker.internal` resolves inside containers (Docker 20.10+ adds this when using compose defaults; the `npm run docker:workers` script passes `--add-host=host.docker.internal:host-gateway`). Start `npm run coord:dev` on the host before workers connect.
 
 ## Stack
 

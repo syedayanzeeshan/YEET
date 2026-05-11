@@ -7,6 +7,7 @@
     "coord:dev": "node server/coordination-server.js",
     "swarm:start": "node scripts/start-swarm.js",
     "swarm:malicious": "node scripts/spawn-malicious-node.js",
+    "docker:workers": "bash scripts/docker-workers-up.sh",
     "swarm:dispatch": "node scripts/dispatch-task.js",
     "build": "next build",
     "start": "next start",
