@@ -2,7 +2,7 @@ node_modules
 
 # Private runbook / video scripts — not shipped to GitHub
 docs/demo.md
-
+docs/review_notes.md
 .next
 out
 dist
