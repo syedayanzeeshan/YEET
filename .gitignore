@@ -7,11 +7,20 @@ docs/review_notes.md
 out
 dist
 coverage
-.env
-.env.local
-.env.*.local
+.vercel
+.env*
+!.env.example
+!.env*.example
+!.env copy.example
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 tsconfig.tsbuildinfo
+
+# Anchor/Solana build output and private program keypairs
+target/
+anchor/target/
+anchor/**/target/
+**/target/deploy/*-keypair.json
+**/*-keypair.json

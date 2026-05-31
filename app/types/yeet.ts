@@ -7,7 +7,6 @@ export type ConsensusState =
   | "forming"
   | "assigned"
   | "executing"
-  | "receipts"
   | "validating"
   | "challenged"
   | "slashing"
@@ -23,10 +22,12 @@ export type HardwareProfile = {
 export type YeetNode = {
   id: string;
   alias: string;
+  stake: number;
+  reliability: number;
+  reputation: number;
+  active: boolean;
   hardware: HardwareProfile;
   uptimeScore: number;
-  reliabilityScore: number;
-  stake: number;
   rolePreference: NodeRole;
   activeRole: NodeRole;
   status: "idle" | "bidding" | "assigned" | "executing" | "validating" | "challenging" | "slashed" | "rewarded";
@@ -53,7 +54,6 @@ export type ExecutionOutput = {
   confidence: number;
   malicious: boolean;
   latencyMs: number;
-  receipt?: ExecutionReceipt;
 };
 
 export type RewardEvent = {

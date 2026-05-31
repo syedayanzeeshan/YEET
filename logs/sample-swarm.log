@@ -29,3 +29,185 @@
 2026-05-10T07:04:12.411Z SUCCESS YEET coordination websocket listening on ws://localhost:8787
 2026-05-10T07:07:13.343Z SUCCESS YEET coordination websocket listening on ws://localhost:8787
 2026-05-10T07:14:02.053Z SUCCESS YEET coordination websocket listening on ws://localhost:8787
+2026-05-11T03:45:49.096Z SUCCESS YEET coordination websocket listening on ws://localhost:8787
+2026-05-11T03:47:23.419Z WARN worker-malicious-01 registered as malicious worker
+2026-05-11T03:47:41.677Z WARN worker-malicious-01 disconnected from coordinator
+2026-05-11T03:47:58.533Z SUCCESS YEET coordination websocket listening on ws://localhost:8787
+2026-05-11T03:49:57.488Z WARN worker-malicious-01 registered as malicious worker
+2026-05-11T03:50:34.121Z INFO task-1778471434120 queued with 1500 YEET reward pool
+2026-05-11T03:50:34.823Z SUCCESS task-1778471434120 assigned to 7 nodes
+2026-05-11T03:50:36.735Z SUCCESS 5 signed receipts verified
+2026-05-11T03:50:36.933Z SUCCESS worker-malicious-01 submitted verified external receipt
+2026-05-11T03:50:37.833Z INFO validator set detected digest divergence
+2026-05-11T03:50:38.934Z WARN node-07 opened fraud challenge against node-05
+2026-05-11T03:50:40.034Z DANGER node-05 slashed for fraudulent digest
+2026-05-11T03:50:41.134Z SUCCESS task-1778471434120 resolved with verified digest 0x6d74a485710434f872
+2026-05-11T03:50:58.977Z INFO task-1778471458976 queued with 1200 YEET reward pool
+2026-05-11T03:50:59.679Z SUCCESS task-1778471458976 assigned to 7 nodes
+2026-05-11T03:51:01.586Z SUCCESS 5 signed receipts verified
+2026-05-11T03:51:01.783Z SUCCESS worker-malicious-01 submitted verified external receipt
+2026-05-11T03:51:02.686Z INFO validator set detected digest divergence
+2026-05-11T03:51:03.786Z WARN node-07 opened fraud challenge against node-05
+2026-05-11T03:51:04.885Z DANGER node-05 slashed for fraudulent digest
+2026-05-11T03:51:05.986Z SUCCESS task-1778471458976 resolved with verified digest 0x1cd26f53219eb396f3
+2026-05-11T03:51:17.376Z INFO task-1778471477376 queued with 1200 YEET reward pool
+2026-05-11T03:51:18.078Z SUCCESS task-1778471477376 assigned to 7 nodes
+2026-05-11T03:51:19.983Z SUCCESS 5 signed receipts verified
+2026-05-11T03:51:20.182Z SUCCESS worker-malicious-01 submitted verified external receipt
+2026-05-11T03:51:21.085Z INFO validator set detected digest divergence
+2026-05-11T03:51:22.185Z WARN node-07 opened fraud challenge against node-04
+2026-05-11T03:51:23.286Z DANGER node-04 slashed for fraudulent digest
+2026-05-11T03:51:24.386Z SUCCESS task-1778471477376 resolved with verified digest 0xbccb3e725e9eaf4cff
+2026-05-11T03:51:32.485Z INFO task-1778471492484 queued with 1500 YEET reward pool
+2026-05-11T03:51:33.186Z SUCCESS task-1778471492484 assigned to 7 nodes
+2026-05-11T03:51:35.094Z SUCCESS 5 signed receipts verified
+2026-05-11T03:51:35.289Z SUCCESS worker-malicious-01 submitted verified external receipt
+2026-05-11T03:51:36.192Z INFO validator set detected digest divergence
+2026-05-11T03:51:37.291Z WARN node-07 opened fraud challenge against node-05
+2026-05-11T03:51:38.392Z DANGER node-05 slashed for fraudulent digest
+2026-05-11T03:51:39.492Z SUCCESS task-1778471492484 resolved with verified digest 0xd02eda316018bef9fd
+2026-05-11T03:51:43.065Z INFO task-1778471503064 queued with 1500 YEET reward pool
+2026-05-11T03:51:43.767Z SUCCESS task-1778471503064 assigned to 7 nodes
+2026-05-11T03:51:45.672Z SUCCESS 5 signed receipts verified
+2026-05-11T03:51:45.871Z SUCCESS worker-malicious-01 submitted verified external receipt
+2026-05-11T03:51:46.772Z INFO validator set detected digest divergence
+2026-05-11T03:51:47.872Z WARN node-07 opened fraud challenge against node-04
+2026-05-11T03:51:48.973Z DANGER node-04 slashed for fraudulent digest
+2026-05-11T03:51:50.072Z SUCCESS task-1778471503064 resolved with verified digest 0xe59554b9a44f1b062c
+2026-05-11T03:52:07.316Z WARN worker-malicious-01 disconnected from coordinator
+2026-05-11T03:54:21.388Z SUCCESS YEET coordination websocket listening on ws://localhost:8787
+2026-05-11T04:17:02.949Z INFO task-1778473022948 queued with 1200 YEET reward pool
+2026-05-11T04:17:03.655Z SUCCESS task-1778473022948 assigned to 7 nodes
+2026-05-11T04:17:05.587Z SUCCESS 5 signed receipts verified
+2026-05-11T04:17:06.679Z INFO validator set detected digest divergence
+2026-05-11T04:17:07.779Z WARN node-07 opened fraud challenge against node-05
+2026-05-11T04:17:08.885Z DANGER node-05 slashed for fraudulent digest
+2026-05-11T04:17:09.979Z SUCCESS task-1778473022948 resolved with verified digest 0xd6498fd6a38aa69a39
+2026-05-11T15:22:01.043Z SUCCESS YEET coordination websocket listening on ws://localhost:8787
+2026-05-11T15:22:45.750Z INFO task-1778512965749 queued with 1500 YEET reward pool
+2026-05-11T15:22:46.451Z SUCCESS task-1778512965749 assigned to 7 nodes
+2026-05-11T15:22:48.363Z SUCCESS 5 signed receipts verified
+2026-05-11T15:22:49.462Z INFO validator set detected digest divergence
+2026-05-11T15:22:50.562Z WARN node-07 opened fraud challenge against node-05
+2026-05-11T15:22:51.664Z DANGER node-05 slashed for fraudulent digest
+2026-05-11T15:22:52.763Z SUCCESS task-1778512965749 resolved with verified digest 0x524f28332bf6cc46b4
+2026-05-11T15:31:15.611Z INFO task-1778513475611 queued with 1200 YEET reward pool
+2026-05-11T15:31:15.727Z INFO task-1778513475726 queued with 1200 YEET reward pool
+2026-05-11T15:31:16.319Z SUCCESS task-1778513475611 assigned to 7 nodes
+2026-05-11T15:31:16.435Z SUCCESS task-1778513475726 assigned to 7 nodes
+2026-05-11T15:31:18.233Z SUCCESS 5 signed receipts verified
+2026-05-11T15:31:18.346Z SUCCESS 5 signed receipts verified
+2026-05-11T15:31:19.331Z INFO validator set detected digest divergence
+2026-05-11T15:31:19.448Z INFO validator set detected digest divergence
+2026-05-11T15:31:20.429Z WARN node-07 opened fraud challenge against node-05
+2026-05-11T15:31:20.548Z WARN node-07 opened fraud challenge against node-05
+2026-05-11T15:31:21.531Z DANGER node-05 slashed for fraudulent digest
+2026-05-11T15:31:21.648Z DANGER node-05 slashed for fraudulent digest
+2026-05-11T15:31:22.632Z SUCCESS task-1778513475611 resolved with verified digest 0xf12fa8ae80c0d0230f
+2026-05-11T15:31:22.746Z SUCCESS task-1778513475726 resolved with verified digest 0x2cd5173b93ad635dad
+2026-05-11T15:31:23.637Z INFO task-1778513483637 queued with 1200 YEET reward pool
+2026-05-11T15:31:24.343Z SUCCESS task-1778513483637 assigned to 7 nodes
+2026-05-11T15:31:26.262Z SUCCESS 5 signed receipts verified
+2026-05-11T15:31:27.362Z INFO validator set detected digest divergence
+2026-05-11T15:31:28.460Z WARN node-07 opened fraud challenge against node-04
+2026-05-11T15:31:29.564Z DANGER node-04 slashed for fraudulent digest
+2026-05-11T15:31:30.667Z SUCCESS task-1778513483637 resolved with verified digest 0x9b0f0592099db2e6a4
+2026-05-11T15:36:35.207Z INFO task-1778513795201 queued with 1200 YEET reward pool
+2026-05-11T15:36:35.917Z SUCCESS task-1778513795201 assigned to 7 nodes
+2026-05-11T15:36:37.834Z SUCCESS 5 signed receipts verified
+2026-05-11T15:36:38.929Z INFO validator set detected digest divergence
+2026-05-11T15:36:40.032Z WARN node-07 opened fraud challenge against node-04
+2026-05-11T15:36:41.129Z DANGER node-04 slashed for fraudulent digest
+2026-05-11T15:36:42.228Z SUCCESS task-1778513795201 resolved with verified digest 0x5b3b687a6545ae945a
+2026-05-11T15:38:20.301Z INFO task-1778513900293 queued with 1200 YEET reward pool
+2026-05-11T15:38:21.005Z SUCCESS task-1778513900293 assigned to 7 nodes
+2026-05-11T15:38:22.920Z SUCCESS 5 signed receipts verified
+2026-05-11T15:38:24.021Z INFO validator set detected digest divergence
+2026-05-11T15:38:25.123Z WARN node-07 opened fraud challenge against node-03
+2026-05-11T15:38:26.222Z DANGER node-03 slashed for fraudulent digest
+2026-05-11T15:38:27.320Z SUCCESS task-1778513900293 resolved with verified digest 0x5bde58d4b7cd19ca29
+2026-05-11T15:38:42.272Z INFO task-1778513922271 queued with 1200 YEET reward pool
+2026-05-11T15:38:42.973Z SUCCESS task-1778513922271 assigned to 7 nodes
+2026-05-11T15:38:44.881Z SUCCESS 5 signed receipts verified
+2026-05-11T15:38:45.534Z INFO task-1778513925534 queued with 1200 YEET reward pool
+2026-05-11T15:38:45.980Z INFO validator set detected digest divergence
+2026-05-11T15:38:46.235Z SUCCESS task-1778513925534 assigned to 7 nodes
+2026-05-11T15:38:47.080Z WARN node-07 opened fraud challenge against node-05
+2026-05-11T15:38:48.141Z SUCCESS 5 signed receipts verified
+2026-05-11T15:38:48.180Z DANGER node-05 slashed for fraudulent digest
+2026-05-11T15:38:49.241Z INFO validator set detected digest divergence
+2026-05-11T15:38:49.279Z SUCCESS task-1778513922271 resolved with verified digest 0x76201dbfff1d55499c
+2026-05-11T15:38:50.341Z WARN node-07 opened fraud challenge against node-05
+2026-05-11T15:38:50.781Z INFO task-1778513930781 queued with 1200 YEET reward pool
+2026-05-11T15:38:51.442Z DANGER node-05 slashed for fraudulent digest
+2026-05-11T15:38:51.483Z SUCCESS task-1778513930781 assigned to 7 nodes
+2026-05-11T15:38:52.541Z SUCCESS task-1778513925534 resolved with verified digest 0xb215f720466f110c9b
+2026-05-11T15:38:53.389Z SUCCESS 5 signed receipts verified
+2026-05-11T15:38:54.161Z INFO task-1778513934161 queued with 1200 YEET reward pool
+2026-05-11T15:38:54.488Z INFO validator set detected digest divergence
+2026-05-11T15:38:54.862Z SUCCESS task-1778513934161 assigned to 7 nodes
+2026-05-11T15:38:55.588Z WARN node-07 opened fraud challenge against node-04
+2026-05-11T15:38:56.689Z DANGER node-04 slashed for fraudulent digest
+2026-05-11T15:38:56.769Z SUCCESS 5 signed receipts verified
+2026-05-11T15:38:57.788Z SUCCESS task-1778513930781 resolved with verified digest 0x028ecc9730d56a135c
+2026-05-11T15:38:57.869Z INFO validator set detected digest divergence
+2026-05-11T15:38:58.969Z WARN node-07 opened fraud challenge against node-04
+2026-05-11T15:39:00.070Z DANGER node-04 slashed for fraudulent digest
+2026-05-11T15:39:01.169Z SUCCESS task-1778513934161 resolved with verified digest 0x31c99c731e3f1a3afe
+2026-05-11T15:42:02.585Z INFO task-1778514122585 queued with 1200 YEET reward pool
+2026-05-11T15:42:03.290Z SUCCESS task-1778514122585 assigned to 7 nodes
+2026-05-11T15:42:05.206Z SUCCESS 5 signed receipts verified
+2026-05-11T15:42:06.299Z INFO validator set detected digest divergence
+2026-05-11T15:42:07.401Z WARN node-07 opened fraud challenge against node-03
+2026-05-11T15:42:08.499Z DANGER node-03 slashed for fraudulent digest
+2026-05-11T15:42:09.600Z SUCCESS task-1778514122585 resolved with verified digest 0xe249abe1cfa6577b43
+2026-05-11T15:43:47.642Z INFO task-1778514227641 queued with 1200 YEET reward pool
+2026-05-11T15:43:48.343Z SUCCESS task-1778514227641 assigned to 7 nodes
+2026-05-11T15:43:50.269Z SUCCESS 5 signed receipts verified
+2026-05-11T15:43:51.367Z INFO validator set detected digest divergence
+2026-05-11T15:43:52.468Z WARN node-07 opened fraud challenge against node-05
+2026-05-11T15:43:53.568Z DANGER node-05 slashed for fraudulent digest
+2026-05-11T15:43:54.668Z SUCCESS task-1778514227641 resolved with verified digest 0xacef42d9230445a86f
+2026-05-11T16:07:48.974Z INFO task-1778515668968 queued with 1200 YEET reward pool
+2026-05-11T16:07:49.679Z SUCCESS task-1778515668968 assigned to 7 nodes
+2026-05-11T16:07:51.592Z SUCCESS 5 signed receipts verified
+2026-05-11T16:07:52.691Z INFO validator set detected digest divergence
+2026-05-11T16:07:53.785Z WARN node-07 opened fraud challenge against node-02
+2026-05-11T16:07:54.886Z DANGER node-02 slashed for fraudulent digest
+2026-05-11T16:07:55.985Z SUCCESS task-1778515668968 resolved with verified digest 0x676730462a0179cb77
+2026-05-11T16:15:49.870Z INFO task-1778516149867 queued with 1200 YEET reward pool
+2026-05-11T16:15:50.571Z SUCCESS task-1778516149867 assigned to 7 nodes
+2026-05-11T16:15:52.494Z SUCCESS 5 signed receipts verified
+2026-05-11T16:15:53.589Z INFO validator set detected digest divergence
+2026-05-11T16:15:54.689Z WARN node-07 opened fraud challenge against node-05
+2026-05-11T16:15:55.790Z DANGER node-05 slashed for fraudulent digest
+2026-05-11T16:15:56.891Z SUCCESS task-1778516149867 resolved with verified digest 0xcf1482bd3de28077be
+2026-05-11T16:20:49.598Z INFO task-1778516449595 queued with 1200 YEET reward pool
+2026-05-11T16:20:50.300Z SUCCESS task-1778516449595 assigned to 7 nodes
+2026-05-11T16:20:52.218Z SUCCESS 5 signed receipts verified
+2026-05-11T16:20:53.312Z INFO validator set detected digest divergence
+2026-05-11T16:20:54.412Z WARN node-07 opened fraud challenge against node-05
+2026-05-11T16:20:55.519Z DANGER node-05 slashed for fraudulent digest
+2026-05-11T16:20:56.613Z SUCCESS task-1778516449595 resolved with verified digest 0x37d3e50c5bb4575f13
+2026-05-11T16:35:45.446Z INFO task-1778517345446 queued with 1200 YEET reward pool
+2026-05-11T16:35:46.148Z SUCCESS task-1778517345446 assigned to 7 nodes
+2026-05-11T16:35:48.056Z SUCCESS 5 signed receipts verified
+2026-05-11T16:35:49.156Z INFO validator set detected digest divergence
+2026-05-11T16:35:50.255Z WARN node-07 opened fraud challenge against node-05
+2026-05-11T16:35:51.357Z DANGER node-05 slashed for fraudulent digest
+2026-05-11T16:35:52.455Z SUCCESS task-1778517345446 resolved with verified digest 0xa5035f18cd5246c836
+2026-05-11T16:41:59.240Z INFO task-1778517719239 queued with 1200 YEET reward pool
+2026-05-11T16:41:59.942Z SUCCESS task-1778517719239 assigned to 7 nodes
+2026-05-11T16:42:01.853Z SUCCESS 5 signed receipts verified
+2026-05-11T16:42:02.952Z INFO validator set detected digest divergence
+2026-05-11T16:42:04.052Z WARN node-07 opened fraud challenge against node-04
+2026-05-11T16:42:05.154Z DANGER node-04 slashed for fraudulent digest
+2026-05-11T16:42:06.253Z SUCCESS task-1778517719239 resolved with verified digest 0x609931ad55ddce6e67
+2026-05-30T21:31:40.040Z SUCCESS YEET coordination websocket listening on ws://localhost:9876
+2026-05-30T21:31:40.791Z INFO task-1780176700789 queued with 1000 YEET reward pool
+2026-05-30T21:31:41.494Z SUCCESS task-1780176700789 assigned to 7 nodes
+2026-05-30T21:31:43.403Z SUCCESS 5 signed receipts verified
+2026-05-30T21:31:44.502Z INFO validator set detected digest divergence
+2026-05-30T21:31:45.603Z WARN node-07 opened fraud challenge against node-05
+2026-05-30T21:31:46.704Z DANGER node-05 slashed for fraudulent digest
+2026-05-30T21:31:46.792Z INFO live demo stage reset; reputation file preserved

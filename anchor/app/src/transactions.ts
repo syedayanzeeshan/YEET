@@ -11,12 +11,27 @@ export function mockRegisterNodeInstruction(operator: PublicKey, hardwareHash: U
   };
 }
 
-export function mockOpenTaskInstruction(requester: PublicKey, rewardPool: number, redundancy: number, verificationThreshold: number) {
-  const [taskEscrow] = deriveTaskEscrowPda(requester);
+export function mockOpenTaskInstruction(
+  requester: PublicKey,
+  taskNonce: bigint | number,
+  rewardPool: number,
+  redundancy: number,
+  verificationThreshold: number,
+  coordinator: PublicKey,
+  metadataHash: Uint8Array
+) {
+  const [taskEscrow] = deriveTaskEscrowPda(requester, taskNonce);
   return {
-    description: "Mock payload for future Anchor open_task instruction.",
+    description: "Mock payload for Anchor open_task instruction with SOL escrow.",
     accounts: { requester, taskEscrow },
-    args: { rewardPool, redundancy, verificationThreshold },
+    args: {
+      taskNonce: taskNonce.toString(),
+      rewardPool,
+      redundancy,
+      verificationThreshold,
+      coordinator,
+      metadataHash: Buffer.from(metadataHash).toString("hex")
+    },
     instruction: new TransactionInstruction({ programId: YEET_PROGRAM_ID, keys: [], data: Buffer.alloc(0) })
   };
 }

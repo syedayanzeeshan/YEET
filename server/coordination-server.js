@@ -5,7 +5,7 @@ const path = require("path");
 const { createNodeIdentity, digestFor, signReceipt, verifyReceipt } = require("./receipt-crypto");
 const { applyReceipt, applySlash, ensureReputation, readReputation, writeReputation } = require("./reputation-store");
 
-const PORT = Number(process.env.YEET_COORDINATOR_PORT ?? 8787);
+const PORT = Number(process.env.YEET_COORDINATOR_PORT ?? process.env.PORT ?? 8787);
 const logPath = path.join(process.cwd(), "logs", "sample-swarm.log");
 
 const roleCycle = ["executor", "validator", "challenger", "hybrid"];
@@ -50,6 +50,8 @@ wss.on("connection", (socket) => {
     const message = parse(raw);
     if (!message) return;
     if (message.type === "dispatch_task") dispatchTask(message.payload);
+    if (message.type === "inject_malicious_worker") injectMaliciousWorker();
+    if (message.type === "reset_demo") resetDemoState();
     if (message.type === "register_worker") registerWorker(socket, message.payload);
     if (message.type === "worker_heartbeat") receiveHeartbeat(message.payload.nodeId);
     if (message.type === "worker_receipt") receiveExternalReceipt(message.payload);
@@ -243,6 +245,43 @@ function registerWorker(socket, payload) {
   broadcastState("nodes");
   broadcastState("reputation");
   log(payload.malicious ? "warn" : "success", `${nodeId} registered as ${payload.malicious ? "malicious" : "honest"} worker`);
+}
+
+function injectMaliciousWorker() {
+  const index = nodes.filter((node) => node.id.startsWith("demo-malicious")).length + 1;
+  const nodeId = `demo-malicious-${String(index).padStart(2, "0")}`;
+  nodeKeys.set(nodeId, createNodeIdentity());
+  ensureReputation(reputation, nodeId);
+  nodes = upsertNode({
+    id: nodeId,
+    alias: `FAULT-${index}`,
+    hardware: { label: "adversarial local worker", gpuScore: 58, vramGb: 8, ramGb: 16 },
+    uptimeScore: 66,
+    reliabilityScore: 38,
+    stake: 190,
+    rolePreference: "executor",
+    activeRole: "executor",
+    status: "bidding",
+    rewardsEarned: 0,
+    fraudHistory: 1,
+    x: 18 + Math.random() * 64,
+    y: 18 + Math.random() * 64
+  });
+  broadcastState("nodes");
+  broadcastState("reputation");
+  log("warn", `${nodeId} armed as a visible adversarial worker for the live demo`);
+}
+
+function resetDemoState() {
+  tasks = [];
+  receipts = [];
+  assignedNodeIds = [];
+  currentRound = null;
+  invalidReceipts = 0;
+  heartbeatCount = 0;
+  nodes = createSeedNodes();
+  broadcast("snapshot", snapshot());
+  log("info", "live demo stage reset; reputation file preserved");
 }
 
 function receiveHeartbeat(nodeId) {

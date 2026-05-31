@@ -40,6 +40,7 @@ data/
   reputation.json           Local persistent reputation store
 docs/
   architecture.md          Solana-native protocol architecture
+  deployment.md            Vercel/coordinator deployment notes
   demo.md                  (optional local copy; excluded from Git — demo / video scripts)
 logs/
   sample-swarm.log          Example coordinator event stream
@@ -73,6 +74,18 @@ npm run dev
 ```
 
 Open `http://localhost:3000` and press `YEET TASK`.
+
+## One-Command Live Demo
+
+```bash
+npm run demo
+```
+
+This starts the websocket coordinator and the Next.js website together. Open `http://localhost:3000`; the website buttons can arm a visible malicious node, run the judge flow, and reset the live demo stage.
+
+## Deployment
+
+See `docs/deployment.md` for the recommended hosted setup: Vercel for the website and a websocket-capable free host for the coordinator.
 
 ## Semi-Functional Swarm Demo
 

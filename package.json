@@ -4,17 +4,22 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "demo": "node scripts/demo.js",
     "coord:dev": "node server/coordination-server.js",
     "swarm:start": "node scripts/start-swarm.js",
     "swarm:malicious": "node scripts/spawn-malicious-node.js",
     "docker:workers": "bash scripts/docker-workers-up.sh",
     "swarm:dispatch": "node scripts/dispatch-task.js",
+    "anchor:build": "cd anchor && anchor build",
+    "anchor:deploy": "cd anchor && anchor deploy --provider.cluster devnet --provider.wallet /home/yantharos/.config/solana/id.json",
+    "anchor:deploy:demo": "bash scripts/deploy-yeet-protocol-demo.sh devnet",
     "build": "next build",
     "start": "next start",
     "lint": "eslint app --max-warnings=0",
     "typecheck": "tsc --noEmit --incremental false"
   },
   "dependencies": {
+    "@solana/web3.js": "^1.98.4",
     "@types/node": "^20.12.12",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",

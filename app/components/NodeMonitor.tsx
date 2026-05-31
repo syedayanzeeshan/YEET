@@ -33,7 +33,7 @@ export function NodeMonitor({ nodes, assignedNodeIds }: { nodes: YeetNode[]; ass
             </div>
 
             <div className="mt-3 grid grid-cols-4 gap-2 text-[10px] text-white/60">
-              <Metric icon={<Shield size={12} />} label="rel" value={`${node.reliabilityScore}%`} />
+              <Metric icon={<Shield size={12} />} label="rel" value={`${node.reliability}%`} />
               <Metric icon={<Swords size={12} />} label="stake" value={`${node.stake}`} />
               <Metric icon={<Trophy size={12} />} label="earn" value={`${node.rewardsEarned}`} />
               <Metric icon={<Shield size={12} />} label="fraud" value={`${node.fraudHistory}`} />

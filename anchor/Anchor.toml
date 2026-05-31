@@ -1,16 +1,21 @@
+[toolchain]
+
 [features]
-seeds = false
+resolution = true
 skip-lint = false
 
-[programs.localnet]
-yeet_coordination = "Yeet111111111111111111111111111111111111111"
+[programs.devnet]
+yeet_coordination = "8brd6wCKHMNXQwahfWrxzSdZpNsYU9JUnDCgpqJznnMP"
+yeet_protocol_demo = "4LPQkrcqQojofvWRnBBmucCnuJGSMzxqLJm8u98DNGEd"
 
-[registry]
-url = "https://api.apr.dev"
+[programs.localnet]
+yeet_protocol_demo = "4LPQkrcqQojofvWRnBBmucCnuJGSMzxqLJm8u98DNGEd"
 
 [provider]
-cluster = "localnet"
+cluster = "devnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
 test = "pnpm ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+
+[hooks]

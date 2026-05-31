@@ -12,27 +12,60 @@ import {
   ReputationStrip,
   TaskLifecyclePanel
 } from "@/app/components/LiveInfrastructurePanels";
+import { DemoControlPanel } from "@/app/components/DemoControlPanel";
+import { LiveClaimPanel } from "@/app/components/LiveClaimPanel";
 import { NodeMonitor } from "@/app/components/NodeMonitor";
-import { RewardFlow } from "@/app/components/RewardFlow";
+import { ProofPanel } from "@/app/components/ProofPanel";
+import { RewardFlow } from "@/app/components/ClaimFlow";
 import { SolanaArchitecture } from "@/app/components/SolanaArchitecture";
 import { SwarmGraph } from "@/app/components/SwarmGraph";
 import { TaskSubmissionPanel } from "@/app/components/TaskSubmissionPanel";
 import { WalletButton } from "@/app/components/WalletButton";
 import { useSwarmSocket } from "@/app/lib/useSwarmSocket";
 import { buildDemoSwarm, defaultTask } from "@/app/lib/yeetSimulation";
-import { YeetTaskInput } from "@/app/types/yeet";
+import {
+  canonicalResultHex,
+  connectPhantomWallet,
+  type OnChainClaim,
+  type OnChainTaskState,
+  type SolanaWallet
+} from "@/app/lib/solana/yeetProgram";
+import { ConsensusRound, ExecutionOutput, RewardEvent, YeetTaskInput } from "@/app/types/yeet";
 
 export default function Home() {
   const [task, setTask] = useState<YeetTaskInput>(defaultTask);
   const [demoNonce, setDemoNonce] = useState(0);
   const [activeRound, setActiveRound] = useState(0);
   const [isAutoplaying, setIsAutoplaying] = useState(false);
+  const [liveMode, setLiveMode] = useState(false);
+  const [solanaWallet, setSolanaWallet] = useState<SolanaWallet | null>(null);
   const timerRef = useRef<number | null>(null);
   const demo = useMemo(() => buildDemoSwarm(task), [task]);
-  const swarmSocket = useSwarmSocket();
-  const round = swarmSocket.currentRound ?? demo.rounds[activeRound];
+  const swarmSocket = useSwarmSocket(undefined, {
+    liveMode,
+    wallet: solanaWallet,
+    task,
+    onWalletConnected: setSolanaWallet
+  });
+  const displayedTaskId = swarmSocket.activeTaskId?.toString() ?? null;
+  const liveRound = useMemo(
+    () =>
+      liveMode
+        ? buildLiveRound({
+            task,
+            taskId: displayedTaskId,
+            claims: swarmSocket.onChainClaims,
+            taskState: swarmSocket.onChainTaskState,
+            canonicalResult: swarmSocket.onChainResult
+          })
+        : null,
+    [liveMode, task, displayedTaskId, swarmSocket.onChainClaims, swarmSocket.onChainTaskState, swarmSocket.onChainResult]
+  );
+  const round = liveRound ?? swarmSocket.currentRound ?? demo.rounds[activeRound];
   const displayedRoundIndex = swarmSocket.currentRound
     ? Math.max(0, demo.rounds.findIndex((candidate) => candidate.state === swarmSocket.currentRound?.state))
+    : liveRound
+      ? Math.max(0, demo.rounds.findIndex((candidate) => candidate.state === liveRound.state))
     : activeRound;
   const liveNodes = swarmSocket.nodes.length > 0 ? swarmSocket.nodes : demo.nodes;
   const assignedNodeIds = swarmSocket.assignedNodeIds.length > 0 ? swarmSocket.assignedNodeIds : demo.assignedNodeIds;
@@ -45,15 +78,33 @@ export default function Home() {
     };
   }, []);
 
-  function yeetTask() {
+  async function yeetTask() {
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+    await new Promise<void>((resolve) => window.setTimeout(resolve, 0));
+
     setDemoNonce((value) => value + 1);
-    const dispatchedLive = swarmSocket.dispatchTask(task);
-    if (dispatchedLive) {
+
+    if (liveMode) {
+      pauseDemo();
+      const result = await swarmSocket.dispatchTask(task);
+      if (result) setActiveRound(0);
+      return;
+    }
+
+    const result = await swarmSocket.dispatchTask(task);
+    if (result === true) {
       pauseDemo();
       setActiveRound(0);
       return;
     }
     runDemo(0);
+  }
+
+  async function connectSolanaWallet() {
+    const wallet = await connectPhantomWallet();
+    setSolanaWallet(wallet);
   }
 
   function runDemo(startIndex = activeRound) {
@@ -140,78 +191,137 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="mx-auto grid max-w-[1500px] gap-4 px-5 py-5 lg:grid-cols-[340px_1fr_360px] lg:px-8">
+      <div className="mx-auto grid max-w-[1500px] gap-4 px-5 py-5 xl:grid-cols-[340px_minmax(0,1fr)] lg:px-8">
         <div className="grid content-start gap-4">
-          <TaskSubmissionPanel task={task} setTask={setTask} onYeet={yeetTask} />
-          <ConsensusTimeline
-            rounds={demo.rounds}
-            activeIndex={displayedRoundIndex}
-            onSelect={selectRound}
-            isAutoplaying={isAutoplaying}
-            onPlay={() => runDemo(activeRound)}
-            onPause={pauseDemo}
+          <DemoControlPanel
+            connected={swarmSocket.connected}
+            onRunFlow={yeetTask}
+            onArmMaliciousWorker={() => {
+              void swarmSocket.armMaliciousWorker();
+              return true;
+            }}
+            onResetStage={swarmSocket.resetDemo}
           />
+          <TaskSubmissionPanel
+            task={task}
+            setTask={setTask}
+            onYeet={yeetTask}
+            liveMode={liveMode}
+            setLiveMode={setLiveMode}
+            onConnectWallet={connectSolanaWallet}
+            walletConnected={Boolean(solanaWallet?.publicKey)}
+            activeTaskId={displayedTaskId}
+            lastTxSignature={swarmSocket.lastTxSignature}
+          />
+          {liveMode ? (
+            <LiveClaimPanel
+              task={task}
+              activeTaskId={displayedTaskId}
+              claims={swarmSocket.onChainClaims}
+              taskState={swarmSocket.onChainTaskState}
+              lastTxSignature={swarmSocket.lastTxSignature}
+              connectedWallet={solanaWallet?.publicKey.toBase58() ?? null}
+              onSignAndSend={swarmSocket.submitClaimForNode}
+              onResolve={(taskId) => swarmSocket.resolveOnChain(BigInt(taskId))}
+              onRefresh={() => void swarmSocket.refreshOnChainState(undefined, true, true)}
+              onTaskIdChange={(taskId) => {
+                const trimmed = taskId.trim();
+                if (/^\d+$/.test(trimmed)) {
+                  const id = BigInt(trimmed);
+                  swarmSocket.selectActiveTaskId(id);
+                  void swarmSocket.refreshOnChainState(id, true, true);
+                }
+              }}
+            />
+          ) : null}
+          {!liveMode ? (
+            <ConsensusTimeline
+              rounds={demo.rounds}
+              activeIndex={displayedRoundIndex}
+              onSelect={selectRound}
+              isAutoplaying={isAutoplaying}
+              onPlay={() => runDemo(activeRound)}
+              onPause={pauseDemo}
+            />
+          ) : null}
         </div>
 
-        <section className="border border-white/10 bg-panel/80 p-4">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-sm uppercase tracking-[0.22em] text-white/80">Network Dashboard</h2>
-            <span className="text-[10px] uppercase tracking-[0.2em] text-acid">off-chain execution</span>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-4">
-            <InfoTile label="Task propagation" value={swarmSocket.metrics.activeTasks > 0 || displayedRoundIndex > 0 ? "in-flight" : "standby"} tone="pulse" />
-            <InfoTile label="Consensus state" value={round.state} tone={round.state === "slashing" ? "flare" : "acid"} />
-            <InfoTile label="Malicious detection" value={round.slashedNodeIds.length ? "proven" : displayedRoundIndex >= 5 ? "challenged" : "watching"} tone="flare" />
-            <InfoTile label="Settlement layer" value="Solana" tone="pulse" />
-          </div>
-
-          <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_0.9fr]">
-            <div className="border border-white/10 bg-black/20 p-4">
-              <div className="mb-3 text-xs uppercase tracking-[0.18em] text-white/50">Adversarial output agreement</div>
-              <div className="grid gap-2">
-                {round.outputs.length === 0 ? (
-                  <div className="text-sm text-white/45">Waiting for executors to return independent digests.</div>
-                ) : (
-                  round.outputs.map((output) => (
-                    <div
-                      key={output.nodeId}
-                      className={`flex items-center justify-between gap-3 border px-3 py-2 text-xs ${output.malicious ? "border-flare/40 bg-flare/[0.08]" : "border-acid/25 bg-acid/[0.06]"
-                        }`}
-                    >
-                      <span className="text-white/70">{output.nodeId}</span>
-                      <span className="truncate text-white">{output.digest}</span>
-                      <span className={output.malicious ? "text-flare" : "text-acid"}>{output.confidence}%</span>
-                    </div>
-                  ))
-                )}
-              </div>
+        <div className="grid min-w-0 content-start gap-4">
+          <section className="border border-white/10 bg-panel/80 p-4">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-sm uppercase tracking-[0.22em] text-white/80">Network Dashboard</h2>
+              <span className="text-[10px] uppercase tracking-[0.2em] text-acid">
+                {liveMode ? "live on-chain" : "off-chain execution"}
+              </span>
             </div>
 
-            <div className="border border-white/10 bg-black/20 p-4">
-              <div className="mb-3 text-xs uppercase tracking-[0.18em] text-white/50">Current market event</div>
-              <h3 className="text-xl font-bold text-white">{round.title}</h3>
-              <p className="mt-3 text-sm leading-6 text-white/58">{round.description}</p>
-              <div className="mt-4 border border-pulse/20 bg-pulse/[0.06] p-3 text-xs leading-5 text-pulse">
-                Correctness is a market: execution, validation, challenge proof, reputation, and slashing all affect settlement.
+            <div className="grid gap-4 md:grid-cols-4">
+              <InfoTile label="Task propagation" value={swarmSocket.metrics.activeTasks > 0 || displayedRoundIndex > 0 ? "in-flight" : "standby"} tone="pulse" />
+              <InfoTile label="Consensus state" value={round.state} tone={round.state === "slashing" ? "flare" : "acid"} />
+              <InfoTile label="Malicious detection" value={round.slashedNodeIds.length ? "proven" : displayedRoundIndex >= 5 ? "challenged" : "watching"} tone="flare" />
+              <InfoTile label="Settlement layer" value={liveMode ? "Devnet" : "Solana"} tone="pulse" />
+            </div>
+
+            <div className="mt-4 grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
+              <div className="min-w-0 border border-white/10 bg-black/20 p-4">
+                <div className="mb-3 text-xs uppercase tracking-[0.18em] text-white/50">Adversarial output agreement</div>
+                <div className="thin-scrollbar grid max-h-[260px] gap-2 overflow-auto pr-1">
+                  {round.outputs.length === 0 ? (
+                    <div className="text-sm text-white/45">Waiting for executors to return independent digests.</div>
+                  ) : (
+                    round.outputs.map((output) => (
+                      <div
+                        key={output.nodeId}
+                        className={`grid grid-cols-[minmax(0,0.8fr)_minmax(0,1fr)_auto] items-center gap-3 border px-3 py-2 text-xs ${output.malicious ? "border-flare/40 bg-flare/[0.08]" : "border-acid/25 bg-acid/[0.06]"
+                          }`}
+                      >
+                        <span className="truncate text-white/70">{output.nodeId}</span>
+                        <span className="truncate font-mono text-white">{output.digest}</span>
+                        <span className={output.malicious ? "text-flare" : "text-acid"}>{output.confidence}%</span>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              <div className="min-w-0 border border-white/10 bg-black/20 p-4">
+                <div className="mb-3 text-xs uppercase tracking-[0.18em] text-white/50">Current market event</div>
+                <h3 className="text-xl font-bold text-white">{round.title}</h3>
+                <p className="mt-3 text-sm leading-6 text-white/58">{round.description}</p>
+                <div className="mt-4 border border-pulse/20 bg-pulse/[0.06] p-3 text-xs leading-5 text-pulse">
+                  Correctness is a market: execution, validation, challenge proof, reputation, and slashing all affect settlement.
+                </div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
 
-        <div className="grid content-start gap-4">
-          <NodeMonitor nodes={liveNodes} assignedNodeIds={assignedNodeIds} />
-          <RewardFlow round={round} rewardPool={task.rewardPool} />
+          <div className="grid min-w-0 gap-4 2xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_380px]">
+            <div className="grid min-w-0 content-start gap-4">
+              <ProofPanel
+                activeTaskId={displayedTaskId}
+                taskState={swarmSocket.onChainTaskState}
+                lastTxSignature={swarmSocket.lastTxSignature}
+              />
+              <RewardFlow
+                round={{
+                  ...round,
+                  verifiedDigest: liveMode && swarmSocket.onChainResult ? swarmSocket.onChainResult : round.verifiedDigest
+                }}
+                rewardPool={task.rewardPool}
+              />
+              <ReceiptPanel receipts={swarmSocket.receipts} />
+            </div>
+            <div className="grid min-w-0 content-start gap-4">
+              <NetworkMetricsPanel metrics={swarmSocket.metrics} connected={swarmSocket.connected} />
+              <TaskLifecyclePanel tasks={swarmSocket.tasks} />
+              <ReputationStrip reputation={swarmSocket.reputation} />
+            </div>
+            <div className="grid min-w-0 content-start gap-4">
+              <NodeMonitor nodes={liveNodes} assignedNodeIds={assignedNodeIds} />
+              <LiveEventFeed logs={swarmSocket.logs} />
+            </div>
+          </div>
         </div>
-      </div>
-      <div className="mx-auto grid max-w-[1500px] gap-4 px-5 pb-5 lg:grid-cols-[1fr_1fr_1fr] lg:px-8">
-        <NetworkMetricsPanel metrics={swarmSocket.metrics} connected={swarmSocket.connected} />
-        <TaskLifecyclePanel tasks={swarmSocket.tasks} />
-        <ReceiptPanel receipts={swarmSocket.receipts} />
-        <div className="lg:col-span-2">
-          <LiveEventFeed logs={swarmSocket.logs} />
-        </div>
-        <ReputationStrip reputation={swarmSocket.reputation} />
       </div>
       <WhyThisMatters />
       <SolanaArchitecture />
@@ -220,6 +330,109 @@ export default function Home() {
       </footer>
     </main>
   );
+}
+
+function buildLiveRound({
+  task,
+  taskId,
+  claims,
+  taskState,
+  canonicalResult
+}: {
+  task: YeetTaskInput;
+  taskId: string | null;
+  claims: OnChainClaim[];
+  taskState: OnChainTaskState | null;
+  canonicalResult: string | null;
+}): ConsensusRound {
+  const outputs = claims.map((claim): ExecutionOutput => {
+    const digest = `0x${Buffer.from(claim.resultHash).toString("hex")}`;
+    const resolved = taskState?.state === 1;
+    const canonical = taskState ? canonicalResultHex(taskState) : null;
+    const malicious = Boolean(
+      resolved &&
+        canonical &&
+        (digest !== canonical || claim.confidence < (taskState?.verificationThreshold ?? task.verificationThreshold))
+    );
+
+    return {
+      nodeId: claim.node.toBase58(),
+      role: claim.role === 0 ? "executor" : claim.role === 1 ? "validator" : "challenger",
+      digest,
+      confidence: claim.confidence,
+      malicious,
+      latencyMs: 0
+    };
+  });
+
+  const slashedNodeIds = outputs.filter((output) => output.malicious).map((output) => output.nodeId);
+  const rewardEvents = buildLiveRewardEvents(outputs, task, taskState);
+  const minClaims = taskState?.difficulty ?? task.difficulty;
+  const claimCount = taskState?.claimCount ?? claims.length;
+  const idLabel = taskId ? `#${taskId}` : "pending task";
+
+  if (taskState?.state === 1) {
+    return {
+      state: slashedNodeIds.length > 0 ? "slashing" : "resolved",
+      title: slashedNodeIds.length > 0 ? "Canonical truth settled with penalties" : "Canonical truth settled",
+      description: `${idLabel} resolved on Solana with ${claimCount} claim${claimCount === 1 ? "" : "s"}. Canonical result and reward accounting are now sourced from the task account.`,
+      outputs,
+      slashedNodeIds,
+      rewardEvents,
+      verifiedDigest: canonicalResult ?? canonicalResultHex(taskState)
+    };
+  }
+
+  if (claims.length > 0) {
+    return {
+      state: claims.length >= minClaims ? "validating" : "executing",
+      title: claims.length >= minClaims ? "Claims ready for resolution" : "Claims arriving on-chain",
+      description: `${idLabel} has ${claims.length}/${minClaims} required claim${minClaims === 1 ? "" : "s"}. Submit enough node receipts, then resolve to settle the canonical result.`,
+      outputs,
+      slashedNodeIds: [],
+      rewardEvents: [],
+      verifiedDigest: undefined
+    };
+  }
+
+  return {
+    state: taskId ? "queued" : "forming",
+    title: taskId ? "Task opened on Solana" : "Live task not created yet",
+    description: taskId
+      ? `${idLabel} is open with ${task.rewardPool} UI reward unit${task.rewardPool === 1 ? "" : "s"}, difficulty ${task.difficulty}, and redundancy ${task.redundancyFactor}.`
+      : "Connect Phantom and create an on-chain task to populate live settlement state.",
+    outputs: [],
+    slashedNodeIds: [],
+    rewardEvents: [],
+    verifiedDigest: undefined
+  };
+}
+
+function buildLiveRewardEvents(
+  outputs: ExecutionOutput[],
+  task: YeetTaskInput,
+  taskState: OnChainTaskState | null
+): RewardEvent[] {
+  if (taskState?.state !== 1) return [];
+
+  const winners = outputs.filter((output) => !output.malicious);
+  const losers = outputs.filter((output) => output.malicious);
+  const rewardShare = winners.length > 0 ? Number((task.rewardPool / winners.length).toFixed(3)) : 0;
+
+  return [
+    ...winners.map((output) => ({
+      nodeId: output.nodeId,
+      label: output.nodeId.slice(0, 8),
+      delta: rewardShare,
+      reason: output.role === "challenger" ? "challenge-backed canonical claim" : "matched canonical result"
+    })),
+    ...losers.map((output) => ({
+      nodeId: output.nodeId,
+      label: output.nodeId.slice(0, 8),
+      delta: -Math.max(1, Math.round(task.rewardPool * 0.2)),
+      reason: "losing or low-confidence claim"
+    }))
+  ];
 }
 
 

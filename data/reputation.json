@@ -10,74 +10,74 @@
   },
   "node-02": {
     "nodeId": "node-02",
-    "reputationScore": 72,
-    "slashCount": 0,
-    "successfulValidations": 0,
+    "reputationScore": 56,
+    "slashCount": 1,
+    "successfulValidations": 2,
     "challengeWins": 0,
-    "maliciousFlags": 0,
-    "lastSeen": 1778394772779
+    "maliciousFlags": 1,
+    "lastSeen": 1778515674885
   },
   "node-03": {
     "nodeId": "node-03",
-    "reputationScore": 72,
-    "slashCount": 0,
-    "successfulValidations": 0,
+    "reputationScore": 44,
+    "slashCount": 2,
+    "successfulValidations": 8,
     "challengeWins": 0,
-    "maliciousFlags": 0,
-    "lastSeen": 1778394772780
+    "maliciousFlags": 2,
+    "lastSeen": 1778517721852
   },
   "node-04": {
     "nodeId": "node-04",
-    "reputationScore": 74,
-    "slashCount": 0,
-    "successfulValidations": 2,
+    "reputationScore": 1,
+    "slashCount": 7,
+    "successfulValidations": 22,
     "challengeWins": 0,
-    "maliciousFlags": 0,
-    "lastSeen": 1778396494637
+    "maliciousFlags": 7,
+    "lastSeen": 1780176703402
   },
   "node-05": {
     "nodeId": "node-05",
-    "reputationScore": 38,
-    "slashCount": 2,
-    "successfulValidations": 2,
+    "reputationScore": 0,
+    "slashCount": 16,
+    "successfulValidations": 20,
     "challengeWins": 0,
-    "maliciousFlags": 2,
-    "lastSeen": 1778396497938
+    "maliciousFlags": 16,
+    "lastSeen": 1780176706703
   },
   "node-06": {
     "nodeId": "node-06",
-    "reputationScore": 74,
+    "reputationScore": 98,
     "slashCount": 0,
     "successfulValidations": 0,
     "challengeWins": 0,
     "maliciousFlags": 0,
-    "lastSeen": 1778396494637
+    "lastSeen": 1780176703402
   },
   "node-07": {
     "nodeId": "node-07",
-    "reputationScore": 74,
+    "reputationScore": 98,
     "slashCount": 0,
     "successfulValidations": 0,
     "challengeWins": 0,
     "maliciousFlags": 0,
-    "lastSeen": 1778396494637
+    "lastSeen": 1780176703402
   },
   "node-08": {
     "nodeId": "node-08",
-    "reputationScore": 74,
+    "reputationScore": 98,
     "slashCount": 0,
     "successfulValidations": 0,
     "challengeWins": 0,
     "maliciousFlags": 0,
-    "lastSeen": 1778396494637
+    "lastSeen": 1780176703402
   },
   "worker-malicious-01": {
     "nodeId": "worker-malicious-01",
-    "reputationScore": 72,
+    "reputationScore": 77,
     "slashCount": 0,
     "successfulValidations": 0,
     "challengeWins": 0,
     "maliciousFlags": 0,
-    "lastSeen": 1778396488632
+    "lastSeen": 1778471525048
   }
 }
