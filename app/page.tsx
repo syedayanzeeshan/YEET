@@ -141,139 +141,166 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen overflow-hidden">
-      <div className="relative border-b border-white/10">
+    <main className="min-h-screen">
+
+      {/* ── HERO ─────────────────────────────────────────────────────── */}
+      <div className="relative isolate overflow-hidden border-b border-white/10">
         <div className="grid-noise absolute inset-0" />
-        <div className="relative mx-auto grid max-w-[1500px] gap-8 px-5 py-8 lg:grid-cols-[1.1fr_0.9fr] lg:px-8">
-          <section className="flex min-h-[420px] flex-col justify-between">
-            <nav className="flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="relative grid h-10 w-10 place-items-center overflow-hidden border border-acid/40 bg-black shadow-acid">
-                  <Image src="/yeet-logo.png" alt="YEET" width={40} height={40} className="object-contain" priority />
-                </div>
-                <div>
-                  <div className="text-xl font-black uppercase tracking-[0.22em] text-white">YEET</div>
-                  <div className="text-[10px] uppercase tracking-[0.24em] text-white/45">Solana-native compute coordination</div>
-                </div>
+
+        <div className="relative mx-auto max-w-[1500px] px-5 lg:px-8">
+          {/* Nav */}
+          <nav className="flex items-center justify-between gap-4 py-5">
+            <div className="flex items-center gap-3">
+              <div className="relative grid h-10 w-10 place-items-center overflow-hidden border border-acid/40 bg-black shadow-acid">
+                <Image src="/yeet-logo.png" alt="YEET" width={40} height={40} className="object-contain" priority />
               </div>
-              <WalletButton />
-            </nav>
+              <div>
+                <div className="text-xl font-black uppercase tracking-[0.22em] text-white">YEET</div>
+                <div className="text-[10px] uppercase tracking-[0.24em] text-white/45">Solana-native compute coordination</div>
+              </div>
+            </div>
+            <WalletButton />
+          </nav>
 
-            <div className="max-w-4xl py-10">
-              <p className="mt-4 max-w-3xl text-sm uppercase tracking-[0.18em] text-pulse md:text-base">
-                Distributed AI coordination with adversarial verification and Solana settlement.
-              </p>
-              <motion.h1
-                className="text-4xl font-black uppercase leading-tight tracking-normal text-white md:text-6xl"
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-              >
-                Solana-native compute swarms where correctness fights back.
-              </motion.h1>
-              <p className="mt-5 max-w-2xl text-base leading-7 text-white/65 md:text-lg">
-                YEET is an adversarial compute coordination protocol: off-chain execution, on-chain accountability,
-                and high-frequency settlement designed for Solana.
-              </p>
-              <p className="mt-4 max-w-2xl border-l border-acid/60 pl-4 text-lg font-black uppercase leading-7 tracking-normal text-acid">
-                YEET rewards nodes for proving the network wrong.
-              </p>
+          {/* Hero: text left, SwarmGraph right */}
+          <div className="grid items-start gap-8 pb-10 pt-2 lg:grid-cols-[1fr_460px] xl:grid-cols-[1fr_520px]">
+            <div className="flex flex-col gap-6">
+              <div>
+                <p className="mb-4 text-sm uppercase tracking-[0.18em] text-pulse md:text-base">
+                  Distributed AI coordination with adversarial verification and Solana settlement.
+                </p>
+                <motion.h1
+                  className="text-4xl font-black uppercase leading-tight tracking-normal text-white md:text-6xl"
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                >
+                  Solana-native compute swarms where correctness fights back.
+                </motion.h1>
+                <p className="mt-5 max-w-2xl text-base leading-7 text-white/65 md:text-lg">
+                  YEET is an adversarial compute coordination protocol: off-chain execution, on-chain accountability,
+                  and high-frequency settlement designed for Solana.
+                </p>
+                <p className="mt-4 border-l border-acid/60 pl-4 text-lg font-black uppercase leading-7 tracking-normal text-acid">
+                  YEET rewards nodes for proving the network wrong.
+                </p>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-4">
+                <Signal icon={<Network size={16} />} label="Dormant compute" value={`${liveNodes.length || 10} nodes`} />
+                <Signal icon={<Activity size={16} />} label="Swarm state" value={round.state} />
+                <Signal icon={<ShieldCheck size={16} />} label="Correctness market" value="armed" />
+                <Signal icon={<Binary size={16} />} label="Settlement" value="Solana-ready" />
+              </div>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-4">
-              <Signal icon={<Network size={16} />} label="Dormant compute" value={`${liveNodes.length || 10} nodes`} />
-              <Signal icon={<Activity size={16} />} label="Swarm state" value={round.state} />
-              <Signal icon={<ShieldCheck size={16} />} label="Correctness market" value="armed" />
-              <Signal icon={<Binary size={16} />} label="Settlement" value="Solana-ready" />
-            </div>
-          </section>
-
-          <SwarmGraph nodes={liveNodes} assignedNodeIds={assignedNodeIds} round={round} pulse={displayedRoundIndex + demoNonce} />
+            <SwarmGraph nodes={liveNodes} assignedNodeIds={assignedNodeIds} round={round} pulse={displayedRoundIndex + demoNonce} />
+          </div>
         </div>
       </div>
 
-      <div className="mx-auto grid max-w-[1500px] gap-4 px-5 py-5 xl:grid-cols-[340px_minmax(0,1fr)] lg:px-8">
-        <div className="grid content-start gap-4">
-          <DemoControlPanel
-            connected={swarmSocket.connected}
-            onRunFlow={yeetTask}
-            onArmMaliciousWorker={() => {
-              void swarmSocket.armMaliciousWorker();
-              return true;
-            }}
-            onResetStage={swarmSocket.resetDemo}
+      {/* ── DASHBOARD ────────────────────────────────────────────────── */}
+      <div className="mx-auto max-w-[1500px] px-5 py-6 lg:px-8">
+
+        {/* Status bar */}
+        <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <InfoTile
+            label="Task propagation"
+            value={swarmSocket.metrics.activeTasks > 0 || displayedRoundIndex > 0 ? "in-flight" : "standby"}
+            tone="pulse"
           />
-          <TaskSubmissionPanel
-            task={task}
-            setTask={setTask}
-            onYeet={yeetTask}
-            liveMode={liveMode}
-            setLiveMode={setLiveMode}
-            onConnectWallet={connectSolanaWallet}
-            walletConnected={Boolean(solanaWallet?.publicKey)}
-            activeTaskId={displayedTaskId}
-            lastTxSignature={swarmSocket.lastTxSignature}
+          <InfoTile
+            label="Consensus state"
+            value={round.state}
+            tone={round.state === "slashing" ? "flare" : "acid"}
           />
-          {liveMode ? (
-            <LiveClaimPanel
-              task={task}
-              activeTaskId={displayedTaskId}
-              claims={swarmSocket.onChainClaims}
-              taskState={swarmSocket.onChainTaskState}
-              lastTxSignature={swarmSocket.lastTxSignature}
-              connectedWallet={solanaWallet?.publicKey.toBase58() ?? null}
-              onSignAndSend={swarmSocket.submitClaimForNode}
-              onResolve={(taskId) => swarmSocket.resolveOnChain(BigInt(taskId))}
-              onRefresh={() => void swarmSocket.refreshOnChainState(undefined, true, true)}
-              onTaskIdChange={(taskId) => {
-                const trimmed = taskId.trim();
-                if (/^\d+$/.test(trimmed)) {
-                  const id = BigInt(trimmed);
-                  swarmSocket.selectActiveTaskId(id);
-                  void swarmSocket.refreshOnChainState(id, true, true);
-                }
-              }}
-            />
-          ) : null}
-          {!liveMode ? (
-            <ConsensusTimeline
-              rounds={demo.rounds}
-              activeIndex={displayedRoundIndex}
-              onSelect={selectRound}
-              isAutoplaying={isAutoplaying}
-              onPlay={() => runDemo(activeRound)}
-              onPause={pauseDemo}
-            />
-          ) : null}
+          <InfoTile
+            label="Malicious detection"
+            value={round.slashedNodeIds.length ? "proven" : displayedRoundIndex >= 5 ? "challenged" : "watching"}
+            tone="flare"
+          />
+          <InfoTile label="Settlement layer" value={liveMode ? "Devnet" : "Solana"} tone="pulse" />
         </div>
 
-        <div className="grid min-w-0 content-start gap-4">
-          <section className="border border-white/10 bg-panel/80 p-4">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-sm uppercase tracking-[0.22em] text-white/80">Network Dashboard</h2>
-              <span className="text-[10px] uppercase tracking-[0.2em] text-acid">
-                {liveMode ? "live on-chain" : "off-chain execution"}
-              </span>
-            </div>
+        {/* Sidebar + main content */}
+        <div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
 
-            <div className="grid gap-4 md:grid-cols-4">
-              <InfoTile label="Task propagation" value={swarmSocket.metrics.activeTasks > 0 || displayedRoundIndex > 0 ? "in-flight" : "standby"} tone="pulse" />
-              <InfoTile label="Consensus state" value={round.state} tone={round.state === "slashing" ? "flare" : "acid"} />
-              <InfoTile label="Malicious detection" value={round.slashedNodeIds.length ? "proven" : displayedRoundIndex >= 5 ? "challenged" : "watching"} tone="flare" />
-              <InfoTile label="Settlement layer" value={liveMode ? "Devnet" : "Solana"} tone="pulse" />
-            </div>
+          {/* ── LEFT SIDEBAR ── */}
+          <div className="flex flex-col gap-4">
+            <DemoControlPanel
+              connected={swarmSocket.connected}
+              onRunFlow={yeetTask}
+              onArmMaliciousWorker={() => {
+                void swarmSocket.armMaliciousWorker();
+                return true;
+              }}
+              onResetStage={swarmSocket.resetDemo}
+            />
+            <TaskSubmissionPanel
+              task={task}
+              setTask={setTask}
+              onYeet={yeetTask}
+              liveMode={liveMode}
+              setLiveMode={setLiveMode}
+              onConnectWallet={connectSolanaWallet}
+              walletConnected={Boolean(solanaWallet?.publicKey)}
+              activeTaskId={displayedTaskId}
+              lastTxSignature={swarmSocket.lastTxSignature}
+            />
+            {liveMode ? (
+              <LiveClaimPanel
+                task={task}
+                activeTaskId={displayedTaskId}
+                claims={swarmSocket.onChainClaims}
+                taskState={swarmSocket.onChainTaskState}
+                lastTxSignature={swarmSocket.lastTxSignature}
+                connectedWallet={solanaWallet?.publicKey.toBase58() ?? null}
+                onSignAndSend={swarmSocket.submitClaimForNode}
+                onResolve={(taskId) => swarmSocket.resolveOnChain(BigInt(taskId))}
+                onRefresh={() => void swarmSocket.refreshOnChainState(undefined, true, true)}
+                onTaskIdChange={(taskId) => {
+                  const trimmed = taskId.trim();
+                  if (/^\d+$/.test(trimmed)) {
+                    const id = BigInt(trimmed);
+                    swarmSocket.selectActiveTaskId(id);
+                    void swarmSocket.refreshOnChainState(id, true, true);
+                  }
+                }}
+              />
+            ) : null}
+            {!liveMode ? (
+              <ConsensusTimeline
+                rounds={demo.rounds}
+                activeIndex={displayedRoundIndex}
+                onSelect={selectRound}
+                isAutoplaying={isAutoplaying}
+                onPlay={() => runDemo(activeRound)}
+                onPause={pauseDemo}
+              />
+            ) : null}
+          </div>
 
-            <div className="mt-4 grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
-              <div className="min-w-0 border border-white/10 bg-black/20 p-4">
-                <div className="mb-3 text-xs uppercase tracking-[0.18em] text-white/50">Adversarial output agreement</div>
-                <div className="thin-scrollbar grid max-h-[260px] gap-2 overflow-auto pr-1">
+          {/* ── RIGHT CONTENT ── */}
+          <div className="flex min-w-0 flex-col gap-4">
+
+            {/* Outputs + market event */}
+            <div className="grid min-w-0 gap-4 xl:grid-cols-[1.2fr_0.8fr]">
+              <div className="border border-white/10 bg-panel/80 p-4">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <h2 className="text-sm uppercase tracking-[0.22em] text-white/80">Adversarial output agreement</h2>
+                  <span className="text-[10px] uppercase tracking-[0.2em] text-acid">
+                    {liveMode ? "live on-chain" : "off-chain execution"}
+                  </span>
+                </div>
+                <div className="thin-scrollbar grid max-h-[240px] gap-2 overflow-auto pr-1">
                   {round.outputs.length === 0 ? (
                     <div className="text-sm text-white/45">Waiting for executors to return independent digests.</div>
                   ) : (
                     round.outputs.map((output) => (
                       <div
                         key={output.nodeId}
-                        className={`grid grid-cols-[minmax(0,0.8fr)_minmax(0,1fr)_auto] items-center gap-3 border px-3 py-2 text-xs ${output.malicious ? "border-flare/40 bg-flare/[0.08]" : "border-acid/25 bg-acid/[0.06]"
-                          }`}
+                        className={`grid grid-cols-[minmax(0,0.8fr)_minmax(0,1fr)_auto] items-center gap-3 border px-3 py-2 text-xs ${
+                          output.malicious ? "border-flare/40 bg-flare/[0.08]" : "border-acid/25 bg-acid/[0.06]"
+                        }`}
                       >
                         <span className="truncate text-white/70">{output.nodeId}</span>
                         <span className="truncate font-mono text-white">{output.digest}</span>
@@ -284,49 +311,54 @@ export default function Home() {
                 </div>
               </div>
 
-              <div className="min-w-0 border border-white/10 bg-black/20 p-4">
+              <div className="border border-white/10 bg-panel/80 p-4">
                 <div className="mb-3 text-xs uppercase tracking-[0.18em] text-white/50">Current market event</div>
                 <h3 className="text-xl font-bold text-white">{round.title}</h3>
-                <p className="mt-3 text-sm leading-6 text-white/58">{round.description}</p>
+                <p className="mt-3 text-sm leading-6 text-white/60">{round.description}</p>
                 <div className="mt-4 border border-pulse/20 bg-pulse/[0.06] p-3 text-xs leading-5 text-pulse">
                   Correctness is a market: execution, validation, challenge proof, reputation, and slashing all affect settlement.
                 </div>
               </div>
             </div>
-          </section>
 
-          <div className="grid min-w-0 gap-4 2xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_380px]">
-            <div className="grid min-w-0 content-start gap-4">
-              <ProofPanel
-                activeTaskId={displayedTaskId}
-                taskState={swarmSocket.onChainTaskState}
-                lastTxSignature={swarmSocket.lastTxSignature}
-              />
-              <RewardFlow
-                round={{
-                  ...round,
-                  verifiedDigest: liveMode && swarmSocket.onChainResult ? swarmSocket.onChainResult : round.verifiedDigest
-                }}
-                rewardPool={task.rewardPool}
-              />
-              <ReceiptPanel receipts={swarmSocket.receipts} />
-            </div>
-            <div className="grid min-w-0 content-start gap-4">
-              <NetworkMetricsPanel metrics={swarmSocket.metrics} connected={swarmSocket.connected} />
-              <TaskLifecyclePanel tasks={swarmSocket.tasks} />
-              <ReputationStrip reputation={swarmSocket.reputation} />
-            </div>
-            <div className="grid min-w-0 content-start gap-4">
-              <NodeMonitor nodes={liveNodes} assignedNodeIds={assignedNodeIds} />
-              <LiveEventFeed logs={swarmSocket.logs} />
+            {/* 3-column panel groups */}
+            <div className="grid min-w-0 gap-4 md:grid-cols-2 xl:grid-cols-3">
+              <div className="flex flex-col gap-4">
+                <ProofPanel
+                  activeTaskId={displayedTaskId}
+                  taskState={swarmSocket.onChainTaskState}
+                  lastTxSignature={swarmSocket.lastTxSignature}
+                />
+                <RewardFlow
+                  round={{
+                    ...round,
+                    verifiedDigest: liveMode && swarmSocket.onChainResult ? swarmSocket.onChainResult : round.verifiedDigest
+                  }}
+                  rewardPool={task.rewardPool}
+                />
+                <ReceiptPanel receipts={swarmSocket.receipts} />
+              </div>
+
+              <div className="flex flex-col gap-4">
+                <NetworkMetricsPanel metrics={swarmSocket.metrics} connected={swarmSocket.connected} />
+                <TaskLifecyclePanel tasks={swarmSocket.tasks} />
+                <ReputationStrip reputation={swarmSocket.reputation} />
+              </div>
+
+              <div className="flex flex-col gap-4 md:col-span-2 xl:col-span-1">
+                <NodeMonitor nodes={liveNodes} assignedNodeIds={assignedNodeIds} />
+                <LiveEventFeed logs={swarmSocket.logs} />
+              </div>
             </div>
           </div>
         </div>
       </div>
+
       <WhyThisMatters />
       <SolanaArchitecture />
+
       <footer className="border-t border-white/10 bg-black/40 py-4 text-center text-xs uppercase tracking-[0.25em] text-white/40">
-        ayan · uswa 
+        ayan · uswa
       </footer>
     </main>
   );
