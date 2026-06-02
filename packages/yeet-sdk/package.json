@@ -1,0 +1,29 @@
+{
+  "name": "@yeet-protocol/sdk",
+  "version": "0.1.0-devnet",
+  "description": "YEET Protocol TypeScript SDK — createTask, submitClaim, resolveTask, registerNode on Solana devnet",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": ["dist", "src"],
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts",
+    "dev": "tsup src/index.ts --format cjs,esm --dts --watch"
+  },
+  "keywords": ["solana", "yeet", "compute", "decentralized", "anchor", "sdk"],
+  "license": "MIT",
+  "peerDependencies": {
+    "@solana/web3.js": "^1.91.0"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.0",
+    "typescript": "^5.0.0"
+  }
+}

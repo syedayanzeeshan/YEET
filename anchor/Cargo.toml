@@ -1,6 +1,5 @@
 [workspace]
 members = [
-    "programs/yeet_coordination",
     "programs/yeet_protocol_demo",
 ]
 resolver = "2"

@@ -1531,13 +1531,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "yeet_coordination"
-version = "0.1.0"
-dependencies = [
- "anchor-lang",
-]
-
-[[package]]
 name = "yeet_protocol_demo"
 version = "0.1.0"
 dependencies = [

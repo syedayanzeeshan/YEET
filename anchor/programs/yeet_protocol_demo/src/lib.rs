@@ -3,24 +3,73 @@ use anchor_lang::AccountDeserialize;
 
 declare_id!("4LPQkrcqQojofvWRnBBmucCnuJGSMzxqLJm8u98DNGEd");
 
-/// Fixed stake factor when nodes do not register on-chain stake (permissionless claims).
+// ── Role weights ───────────────────────────────────────────────────────────────
 pub const DEFAULT_STAKE_FACTOR: u32 = 50;
-
 pub const EXECUTOR_ROLE_WEIGHT: u32 = 30;
 pub const VALIDATOR_ROLE_WEIGHT: u32 = 20;
 pub const CHALLENGER_ROLE_WEIGHT: u32 = 40;
 
+// ── Reward pool splits (basis points) ─────────────────────────────────────────
 pub const EXECUTION_POOL_BPS: u64 = 8000;
 pub const CHALLENGER_POOL_BPS: u64 = 1500;
 pub const RESERVED_BPS: u64 = 500;
 pub const BPS_DENOMINATOR: u64 = 10_000;
 
+// ── Challenger bond (0.005 SOL) – forfeited on losing claim ───────────────────
+pub const CHALLENGE_BOND_LAMPORTS: u64 = 5_000_000;
+
+// ── Reputation deltas ─────────────────────────────────────────────────────────
+pub const REP_CORRECT: u16 = 5;
+pub const REP_CHALLENGE_WIN_BONUS: u16 = 3;
+pub const REP_SLASH: u16 = 10;
+pub const REP_INITIAL: u16 = 72;
+
+// ── Size caps ─────────────────────────────────────────────────────────────────
 pub const MAX_NAME_LEN: usize = 64;
 pub const MAX_TASK_TYPE_LEN: usize = 32;
+pub const MAX_TASK_HISTORY: usize = 32;
 
 #[program]
 pub mod yeet_protocol_demo {
     use super::*;
+
+    // ── NODE REGISTRY (merged from yeet_coordination) ─────────────────────────
+
+    /// Register or update an operator's on-chain node profile.
+    /// Idempotent — calling again updates hardware hash and role preference.
+    pub fn register_node(
+        ctx: Context<RegisterNode>,
+        hardware_hash: [u8; 32],
+        role_preference: u8,
+    ) -> Result<()> {
+        require!(role_preference <= 3, YeetError::InvalidRolePreference);
+
+        let profile = &mut ctx.accounts.node_profile;
+        let is_new = profile.operator == Pubkey::default();
+
+        profile.operator = ctx.accounts.operator.key();
+        profile.hardware_hash = hardware_hash;
+        profile.role_preference = role_preference;
+        profile.bump = ctx.bumps.node_profile;
+
+        if is_new {
+            profile.reputation_score = REP_INITIAL;
+            profile.slash_count = 0;
+            profile.challenge_wins = 0;
+            profile.total_tasks = 0;
+        }
+
+        emit!(NodeRegistered {
+            operator: profile.operator,
+            node_profile: profile.key(),
+            role_preference,
+            reputation_score: profile.reputation_score,
+        });
+
+        Ok(())
+    }
+
+    // ── TASK LIFECYCLE ─────────────────────────────────────────────────────────
 
     pub fn create_task(
         ctx: Context<CreateTask>,
@@ -82,6 +131,18 @@ pub mod yeet_protocol_demo {
         task.canonical_result = [0u8; 32];
         task.bump = ctx.bumps.task_state;
 
+        // ── Update requester's persistent task history ─────────────────────
+        let history = &mut ctx.accounts.task_history;
+        if history.owner == Pubkey::default() {
+            history.owner = ctx.accounts.requester.key();
+            history.bump = ctx.bumps.task_history;
+        }
+        history.count = history.count.saturating_add(1);
+        if history.recent_task_ids.len() >= MAX_TASK_HISTORY {
+            history.recent_task_ids.remove(0);
+        }
+        history.recent_task_ids.push(task_id);
+
         emit!(TaskCreated {
             task_id,
             requester: task.requester,
@@ -98,6 +159,9 @@ pub mod yeet_protocol_demo {
         Ok(())
     }
 
+    /// Submit an execution claim for an open task.
+    /// Challengers (role = 2) must bond CHALLENGE_BOND_LAMPORTS,
+    /// which is returned on a winning challenge or forfeited on loss.
     pub fn submit_claim(
         ctx: Context<SubmitClaim>,
         role: u8,
@@ -106,16 +170,39 @@ pub mod yeet_protocol_demo {
     ) -> Result<()> {
         require!(role <= 2, YeetError::InvalidRole);
         require!(confidence <= 100, YeetError::InvalidConfidence);
+        // Check state before taking any mutable borrow so the CPI below compiles.
+        require!(
+            ctx.accounts.task_state.state == TaskStatus::Open as u8,
+            YeetError::TaskNotOpen
+        );
+
+        // ── Challenger bond escrow ─────────────────────────────────────────
+        // CPI must happen before `task` mutable borrow to satisfy the borrow checker.
+        let challenge_bond: u64 = if role == Role::Challenger as u8 {
+            anchor_lang::system_program::transfer(
+                CpiContext::new(
+                    ctx.accounts.system_program.key(),
+                    anchor_lang::system_program::Transfer {
+                        from: ctx.accounts.node.to_account_info(),
+                        to: ctx.accounts.task_state.to_account_info(),
+                    },
+                ),
+                CHALLENGE_BOND_LAMPORTS,
+            )?;
+            CHALLENGE_BOND_LAMPORTS
+        } else {
+            0
+        };
 
         let task = &mut ctx.accounts.task_state;
-        require!(task.state == TaskStatus::Open as u8, YeetError::TaskNotOpen);
-
         let claim = &mut ctx.accounts.claim;
         claim.task_id = task.task_id;
         claim.node = ctx.accounts.node.key();
         claim.role = role;
         claim.result_hash = result_hash;
         claim.confidence = confidence;
+        claim.challenge_bond = challenge_bond;
+        claim.reputation_settled = false;
         claim.bump = ctx.bumps.claim;
 
         task.claim_count = task
@@ -130,12 +217,15 @@ pub mod yeet_protocol_demo {
             role,
             result_hash,
             confidence,
+            challenge_bond,
         });
 
         Ok(())
     }
 
-    /// Permissionless resolution — pass every claim account for this task as remaining_accounts.
+    /// Permissionless resolution — pass every Claim PDA then every node wallet
+    /// as remaining_accounts. Losing challenger bonds are redistributed to
+    /// correct executors and validators.
     pub fn resolve_task(ctx: Context<ResolveTask>) -> Result<()> {
         let task = &mut ctx.accounts.task_state;
         require!(task.state == TaskStatus::Open as u8, YeetError::TaskNotOpen);
@@ -149,24 +239,25 @@ pub mod yeet_protocol_demo {
             YeetError::MissingClaimAccounts
         );
 
-        let mut parsed_claims: Vec<ClaimView> = Vec::new();
-
+        // ── Deserialize all claims ─────────────────────────────────────────
+        let mut parsed: Vec<ClaimView> = Vec::new();
         for info in claim_infos.iter().take(task.claim_count as usize) {
             require!(info.owner == ctx.program_id, YeetError::InvalidClaimOwner);
             let data = info.try_borrow_data()?;
             let mut slice: &[u8] = &data;
             let claim = Claim::try_deserialize(&mut slice)?;
             require!(claim.task_id == task.task_id, YeetError::ClaimTaskMismatch);
-            parsed_claims.push(ClaimView {
+            parsed.push(ClaimView {
                 node: claim.node,
                 role: claim.role,
                 result_hash: claim.result_hash,
                 confidence: claim.confidence,
+                challenge_bond: claim.challenge_bond,
                 weight: claim_weight(claim.role, claim.confidence),
             });
         }
 
-        let canonical = pick_canonical_result(&parsed_claims)?;
+        let canonical = pick_canonical_result(&parsed)?;
         let task_key = task.key();
         let task_id = task.task_id;
         let verification_threshold = task.verification_threshold;
@@ -183,7 +274,8 @@ pub mod yeet_protocol_demo {
             claim_count,
         });
 
-        let execution_pool = reward_pool
+        // ── Pool accounting ────────────────────────────────────────────────
+        let execution_pool_base = reward_pool
             .checked_mul(EXECUTION_POOL_BPS)
             .ok_or(YeetError::MathOverflow)?
             / BPS_DENOMINATOR;
@@ -192,31 +284,35 @@ pub mod yeet_protocol_demo {
             .ok_or(YeetError::MathOverflow)?
             / BPS_DENOMINATOR;
 
+        // Losing challenger bonds are forfeited to the execution pool
+        let forfeited_bonds: u64 = parsed
+            .iter()
+            .filter(|c| {
+                c.role == Role::Challenger as u8
+                    && (c.result_hash != canonical || c.confidence < verification_threshold)
+            })
+            .map(|c| c.challenge_bond)
+            .fold(0u64, |acc, b| acc.saturating_add(b));
+
+        let execution_pool = execution_pool_base.saturating_add(forfeited_bonds);
+
+        // Accumulate weight sums for correct claimants
         let mut execution_weight_sum: u64 = 0;
         let mut challenger_weight_sum: u64 = 0;
-
-        for claim in parsed_claims.iter() {
-            let matches =
+        for claim in parsed.iter() {
+            let correct =
                 claim.result_hash == canonical && claim.confidence >= verification_threshold;
-            if !matches {
-                let slashed = claim.confidence < verification_threshold
-                    || claim.result_hash != canonical;
-                if slashed {
-                    emit!(SlashEvent {
-                        task_id,
-                        node: claim.node,
-                        result_hash: claim.result_hash,
-                        confidence: claim.confidence,
-                        reason: if claim.confidence < verification_threshold {
-                            0
-                        } else {
-                            1
-                        },
-                    });
-                }
+            if !correct {
+                emit!(SlashEvent {
+                    task_id,
+                    node: claim.node,
+                    result_hash: claim.result_hash,
+                    confidence: claim.confidence,
+                    forfeited_bond: claim.challenge_bond,
+                    reason: if claim.confidence < verification_threshold { 0 } else { 1 },
+                });
                 continue;
             }
-
             if claim.role == Role::Challenger as u8 {
                 challenger_weight_sum = challenger_weight_sum
                     .checked_add(claim.weight as u64)
@@ -228,14 +324,17 @@ pub mod yeet_protocol_demo {
             }
         }
 
+        // ── Pay winners ───────────────────────────────────────────────────
         let task_info = ctx.accounts.task_state.to_account_info();
 
-        for claim in parsed_claims.iter() {
-            if claim.result_hash != canonical || claim.confidence < verification_threshold {
+        for claim in parsed.iter() {
+            let correct =
+                claim.result_hash == canonical && claim.confidence >= verification_threshold;
+            if !correct {
                 continue;
             }
 
-            let payout = if claim.role == Role::Challenger as u8 {
+            let pool_payout = if claim.role == Role::Challenger as u8 {
                 if challenger_weight_sum == 0 {
                     0
                 } else {
@@ -253,31 +352,106 @@ pub mod yeet_protocol_demo {
                     / execution_weight_sum
             };
 
-            if payout == 0 {
+            // Bond is returned to winning challengers on top of their pool share
+            let total_payout = if claim.role == Role::Challenger as u8 {
+                pool_payout.saturating_add(claim.challenge_bond)
+            } else {
+                pool_payout
+            };
+
+            if total_payout == 0 {
                 continue;
             }
 
-            let node_info = ctx
-                .remaining_accounts
+            let node_info = claim_infos
                 .iter()
                 .find(|info| info.key() == claim.node);
 
             if let Some(node_account) = node_info {
-                **task_info.try_borrow_mut_lamports()? -= payout;
-                **node_account.try_borrow_mut_lamports()? += payout;
+                **task_info.try_borrow_mut_lamports()? -= total_payout;
+                **node_account.try_borrow_mut_lamports()? += total_payout;
 
                 emit!(RewardPaid {
                     task_id,
                     node: claim.node,
-                    amount: payout,
+                    amount: total_payout,
                     role: claim.role,
                     result_hash: claim.result_hash,
+                    bond_returned: claim.challenge_bond,
                 });
             }
         }
 
         Ok(())
     }
+
+    // ── REPUTATION SETTLEMENT ──────────────────────────────────────────────────
+
+    /// Permissionless — anyone may call this after task resolution to settle
+    /// on-chain reputation for a single registered node. Marks the claim
+    /// as settled to prevent double-counting.
+    pub fn update_node_reputation(ctx: Context<UpdateNodeReputation>) -> Result<()> {
+        let task = &ctx.accounts.task_state;
+        let claim = &mut ctx.accounts.claim;
+        let profile = &mut ctx.accounts.node_profile;
+
+        require!(
+            task.state == TaskStatus::Resolved as u8,
+            YeetError::TaskNotResolved
+        );
+        require!(!claim.reputation_settled, YeetError::ReputationAlreadySettled);
+
+        let correct = claim.result_hash == task.canonical_result
+            && claim.confidence >= task.verification_threshold;
+
+        if correct {
+            profile.reputation_score = profile
+                .reputation_score
+                .saturating_add(REP_CORRECT);
+            if claim.role == Role::Challenger as u8 {
+                profile.reputation_score = profile
+                    .reputation_score
+                    .saturating_add(REP_CHALLENGE_WIN_BONUS);
+                profile.challenge_wins = profile.challenge_wins.saturating_add(1);
+            }
+        } else {
+            profile.reputation_score = profile
+                .reputation_score
+                .saturating_sub(REP_SLASH);
+            profile.slash_count = profile.slash_count.saturating_add(1);
+        }
+        profile.total_tasks = profile.total_tasks.saturating_add(1);
+        claim.reputation_settled = true;
+
+        emit!(ReputationUpdated {
+            node: profile.operator,
+            task_id: task.task_id,
+            correct,
+            new_reputation_score: profile.reputation_score,
+            slash_count: profile.slash_count,
+            challenge_wins: profile.challenge_wins,
+            total_tasks: profile.total_tasks,
+        });
+
+        Ok(())
+    }
+}
+
+// ── ACCOUNT CONTEXTS ──────────────────────────────────────────────────────────
+
+#[derive(Accounts)]
+pub struct RegisterNode<'info> {
+    #[account(mut)]
+    pub operator: Signer<'info>,
+    #[account(
+        init_if_needed,
+        payer = operator,
+        space = 8 + NodeProfile::INIT_SPACE,
+        seeds = [b"node", operator.key().as_ref()],
+        bump
+    )]
+    pub node_profile: Account<'info, NodeProfile>,
+    pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
@@ -301,6 +475,14 @@ pub struct CreateTask<'info> {
         bump
     )]
     pub task_state: Account<'info, TaskState>,
+    #[account(
+        init_if_needed,
+        payer = requester,
+        space = 8 + TaskHistory::INIT_SPACE,
+        seeds = [b"history", requester.key().as_ref()],
+        bump
+    )]
+    pub task_history: Account<'info, TaskHistory>,
     pub system_program: Program<'info, System>,
 }
 
@@ -337,6 +519,34 @@ pub struct ResolveTask<'info> {
     pub task_state: Account<'info, TaskState>,
 }
 
+#[derive(Accounts)]
+pub struct UpdateNodeReputation<'info> {
+    /// Anyone can trigger reputation settlement (permissionless).
+    #[account(mut)]
+    pub caller: Signer<'info>,
+    #[account(
+        seeds = [b"task", task_state.task_id.to_le_bytes().as_ref()],
+        bump = task_state.bump
+    )]
+    pub task_state: Account<'info, TaskState>,
+    #[account(
+        mut,
+        seeds = [b"claim", task_state.task_id.to_le_bytes().as_ref(), claim.node.as_ref()],
+        bump = claim.bump,
+        constraint = claim.task_id == task_state.task_id @ YeetError::ClaimTaskMismatch
+    )]
+    pub claim: Account<'info, Claim>,
+    #[account(
+        mut,
+        seeds = [b"node", node_profile.operator.as_ref()],
+        bump = node_profile.bump,
+        constraint = node_profile.operator == claim.node @ YeetError::NodeProfileMismatch
+    )]
+    pub node_profile: Account<'info, NodeProfile>,
+}
+
+// ── ON-CHAIN ACCOUNT STRUCTS ──────────────────────────────────────────────────
+
 #[account]
 #[derive(InitSpace)]
 pub struct ProtocolState {
@@ -364,6 +574,32 @@ pub struct TaskState {
     pub bump: u8,
 }
 
+/// Per-operator on-chain reputation profile (merged from yeet_coordination).
+#[account]
+#[derive(InitSpace)]
+pub struct NodeProfile {
+    pub operator: Pubkey,
+    pub hardware_hash: [u8; 32],
+    pub role_preference: u8,
+    pub reputation_score: u16,
+    pub slash_count: u16,
+    pub challenge_wins: u16,
+    pub total_tasks: u32,
+    pub bump: u8,
+}
+
+/// Requester's persistent history — holds last MAX_TASK_HISTORY task IDs.
+#[account]
+#[derive(InitSpace)]
+pub struct TaskHistory {
+    pub owner: Pubkey,
+    pub count: u32,
+    #[max_len(MAX_TASK_HISTORY)]
+    pub recent_task_ids: Vec<u64>,
+    pub bump: u8,
+}
+
+/// A single node's execution claim for a task.
 #[account]
 #[derive(InitSpace)]
 pub struct Claim {
@@ -372,8 +608,14 @@ pub struct Claim {
     pub role: u8,
     pub result_hash: [u8; 32],
     pub confidence: u8,
+    /// Lamports bonded by a challenger; 0 for executors and validators.
+    pub challenge_bond: u64,
+    /// True once update_node_reputation has been called for this claim.
+    pub reputation_settled: bool,
     pub bump: u8,
 }
+
+// ── INTERNAL TYPES ────────────────────────────────────────────────────────────
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum TaskStatus {
@@ -393,6 +635,7 @@ struct ClaimView {
     role: u8,
     result_hash: [u8; 32],
     confidence: u8,
+    challenge_bond: u64,
     weight: u32,
 }
 
@@ -410,10 +653,8 @@ fn claim_weight(role: u8, confidence: u8) -> u32 {
 
 fn pick_canonical_result(claims: &[ClaimView]) -> Result<[u8; 32]> {
     require!(!claims.is_empty(), YeetError::NoClaims);
-
     let mut best_hash = claims[0].result_hash;
     let mut best_score: u64 = 0;
-
     for anchor in claims.iter() {
         let mut cluster_score: u64 = 0;
         for claim in claims.iter() {
@@ -428,8 +669,17 @@ fn pick_canonical_result(claims: &[ClaimView]) -> Result<[u8; 32]> {
             best_hash = anchor.result_hash;
         }
     }
-
     Ok(best_hash)
+}
+
+// ── EVENTS ────────────────────────────────────────────────────────────────────
+
+#[event]
+pub struct NodeRegistered {
+    pub operator: Pubkey,
+    pub node_profile: Pubkey,
+    pub role_preference: u8,
+    pub reputation_score: u16,
 }
 
 #[event]
@@ -454,6 +704,7 @@ pub struct ClaimSubmitted {
     pub role: u8,
     pub result_hash: [u8; 32],
     pub confidence: u8,
+    pub challenge_bond: u64,
 }
 
 #[event]
@@ -471,6 +722,7 @@ pub struct RewardPaid {
     pub amount: u64,
     pub role: u8,
     pub result_hash: [u8; 32],
+    pub bond_returned: u64,
 }
 
 #[event]
@@ -479,12 +731,28 @@ pub struct SlashEvent {
     pub node: Pubkey,
     pub result_hash: [u8; 32],
     pub confidence: u8,
-    /// 0 = below threshold, 1 = losing hash
+    pub forfeited_bond: u64,
+    /// 0 = below confidence threshold, 1 = wrong result hash
     pub reason: u8,
 }
 
+#[event]
+pub struct ReputationUpdated {
+    pub node: Pubkey,
+    pub task_id: u64,
+    pub correct: bool,
+    pub new_reputation_score: u16,
+    pub slash_count: u16,
+    pub challenge_wins: u16,
+    pub total_tasks: u32,
+}
+
+// ── ERRORS ────────────────────────────────────────────────────────────────────
+
 #[error_code]
 pub enum YeetError {
+    #[msg("Role preference must be executor (0), validator (1), challenger (2), or hybrid (3).")]
+    InvalidRolePreference,
     #[msg("Task name must be 1-64 characters.")]
     InvalidName,
     #[msg("Task type must be 1-32 characters.")]
@@ -507,6 +775,8 @@ pub enum YeetError {
     InvalidConfidence,
     #[msg("Task is not open.")]
     TaskNotOpen,
+    #[msg("Task is not yet resolved.")]
+    TaskNotResolved,
     #[msg("Claim count overflow.")]
     ClaimCountOverflow,
     #[msg("Not enough claims submitted — difficulty sets the minimum.")]
@@ -517,6 +787,10 @@ pub enum YeetError {
     InvalidClaimOwner,
     #[msg("Claim does not belong to this task.")]
     ClaimTaskMismatch,
+    #[msg("Node profile operator does not match claim node.")]
+    NodeProfileMismatch,
+    #[msg("Reputation already settled for this claim.")]
+    ReputationAlreadySettled,
     #[msg("No claims to resolve.")]
     NoClaims,
     #[msg("Math overflow.")]

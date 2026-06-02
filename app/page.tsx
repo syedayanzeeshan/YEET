@@ -26,7 +26,10 @@ import { buildDemoSwarm, defaultTask } from "@/app/lib/yeetSimulation";
 import {
   canonicalResultHex,
   connectPhantomWallet,
+  fetchNodeProfile,
+  registerNode,
   type OnChainClaim,
+  type OnChainNodeProfile,
   type OnChainTaskState,
   type SolanaWallet
 } from "@/app/lib/solana/yeetProgram";
@@ -39,6 +42,7 @@ export default function Home() {
   const [isAutoplaying, setIsAutoplaying] = useState(false);
   const [liveMode, setLiveMode] = useState(false);
   const [solanaWallet, setSolanaWallet] = useState<SolanaWallet | null>(null);
+  const [nodeProfile, setNodeProfile] = useState<OnChainNodeProfile | null>(null);
   const timerRef = useRef<number | null>(null);
   const demo = useMemo(() => buildDemoSwarm(task), [task]);
   const swarmSocket = useSwarmSocket(undefined, {
@@ -105,6 +109,17 @@ export default function Home() {
   async function connectSolanaWallet() {
     const wallet = await connectPhantomWallet();
     setSolanaWallet(wallet);
+    if (wallet) {
+      const profile = await fetchNodeProfile(wallet.publicKey).catch(() => null);
+      setNodeProfile(profile);
+    }
+  }
+
+  async function handleRegisterNode(hardwareLabel: string, rolePreference: 0 | 1 | 2 | 3) {
+    if (!solanaWallet) return;
+    await registerNode(solanaWallet, hardwareLabel, rolePreference);
+    const profile = await fetchNodeProfile(solanaWallet.publicKey).catch(() => null);
+    setNodeProfile(profile);
   }
 
   function runDemo(startIndex = activeRound) {
@@ -328,6 +343,7 @@ export default function Home() {
                   activeTaskId={displayedTaskId}
                   taskState={swarmSocket.onChainTaskState}
                   lastTxSignature={swarmSocket.lastTxSignature}
+                  walletPublicKey={solanaWallet?.publicKey.toBase58() ?? null}
                 />
                 <RewardFlow
                   round={{
@@ -346,7 +362,13 @@ export default function Home() {
               </div>
 
               <div className="flex flex-col gap-4 md:col-span-2 xl:col-span-1">
-                <NodeMonitor nodes={liveNodes} assignedNodeIds={assignedNodeIds} />
+                <NodeMonitor
+                  nodes={liveNodes}
+                  assignedNodeIds={assignedNodeIds}
+                  liveMode={liveMode}
+                  onRegisterNode={solanaWallet ? handleRegisterNode : undefined}
+                  nodeProfile={nodeProfile}
+                />
                 <LiveEventFeed logs={swarmSocket.logs} />
               </div>
             </div>
